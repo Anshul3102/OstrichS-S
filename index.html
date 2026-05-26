@@ -999,7 +999,7 @@
       else alert('Please paste some script text first.');
     });
 
-    function loadScript(text, filename) {
+    function loadScript(text, filename, skipPersist) {
       try {
         const ext = (filename || '').split('.').pop().toLowerCase();
         const trimmed = text.trim();
@@ -1018,7 +1018,7 @@
         renderScript();
         renderShotList();
         updateStats();
-        persistSession();
+        if (!skipPersist) persistSession();
       } catch (err) {
         alert('Error loading script: ' + err.message);
         console.error(err);
@@ -1754,7 +1754,8 @@
       if (!savedScript) return;
       const savedFilename = localStorage.getItem('sts_filename') || '';
       const savedAnnotations = localStorage.getItem('sts_annotations');
-      loadScript(savedScript, savedFilename);
+      // skipPersist=true so we don't overwrite the stored annotations before restoring them
+      loadScript(savedScript, savedFilename, true);
       if (savedAnnotations) {
         try {
           const annotations = JSON.parse(savedAnnotations);
