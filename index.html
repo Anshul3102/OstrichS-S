@@ -864,6 +864,10 @@
         <button class="close-btn" id="close-modal-btn">×</button>
       </div>
       <div class="modal-body">
+        <!-- Revision warning -->
+        <div id="revision-banner" style="display:none;background:rgba(255,60,60,0.12);border:1px solid #ff4444;border-radius:8px;padding:8px 14px;margin-bottom:14px;font-size:12px;color:#ff6666;">
+          ⚑ Flagged for revision — make your changes and click Save to clear the flag.
+        </div>
         <!-- Context -->
         <div class="context-box" id="context-box"></div>
 
@@ -1398,6 +1402,15 @@
 
       document.getElementById('shot-notes').value = draft.notes || '';
       document.getElementById('remove-shot-btn').style.display = tok.annotation ? 'inline-flex' : 'none';
+
+      // Show/hide revision banner
+      const revBanner = document.getElementById('revision-banner');
+      if (tok.annotation && tok.annotation.needsRevision) {
+        revBanner.style.display = 'block';
+      } else {
+        revBanner.style.display = 'none';
+      }
+
       document.getElementById('modal-backdrop').classList.add('open');
     }
 
@@ -1410,7 +1423,7 @@
       if (activeId === null) return;
       draft.notes = document.getElementById('shot-notes').value.trim();
       const hasAny = draft.shotType || draft.angle || (draft.movements && draft.movements.length) || draft.motion || draft.notes;
-      tokenMap.get(activeId).annotation = hasAny ? { ...draft } : null;
+      tokenMap.get(activeId).annotation = hasAny ? { ...draft, needsRevision: false } : null;
       closeModal();
       refreshAnnotationDisplay();
       renderShotList();
