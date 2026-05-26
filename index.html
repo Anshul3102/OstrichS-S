@@ -1033,6 +1033,124 @@
       margin-left: 0;
     }
 
+    /* ── Overview Screen ── */
+    #overview-screen {
+      display: none;
+      flex-direction: column;
+      height: calc(100vh - 53px);
+      overflow: hidden;
+    }
+    .overview-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 28px 36px;
+      overflow: hidden;
+      gap: 16px;
+    }
+    .overview-header {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-shrink: 0;
+    }
+    .overview-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .overview-legend {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-left: auto;
+    }
+    .ov-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+    .ov-legend-swatch {
+      width: 26px;
+      height: 3px;
+      border-radius: 2px;
+    }
+    .ov-legend-swatch.dl { background: #e8a44a; }
+    .ov-legend-swatch.ac { background: #5b8aff; }
+    .ov-legend-note {
+      font-size: 11px;
+      color: var(--text-dim);
+      opacity: 0.5;
+      margin-left: 10px;
+    }
+    .overview-chart-wrap {
+      flex: 1;
+      overflow-x: auto;
+      overflow-y: hidden;
+      border-radius: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 24px 0 0;
+      min-height: 220px;
+      position: relative;
+    }
+    #overview-svg { display: block; }
+    .overview-empty {
+      text-align: center;
+      color: var(--text-dim);
+      padding: 60px 0;
+      font-size: 14px;
+    }
+    .overview-tooltip {
+      position: fixed;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      pointer-events: none;
+      z-index: 200;
+      min-width: 190px;
+      max-width: 290px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.6);
+      display: none;
+    }
+    .ov-tt-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: var(--text);
+      margin-bottom: 7px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ov-tt-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 3px;
+    }
+    .ov-tt-dl { color: #e8a44a; }
+    .ov-tt-ac { color: #5b8aff; }
+    .ov-tt-badge {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin-top: 6px;
+    }
+    .ov-badge-dl { background: rgba(232,164,74,0.18); color: #e8a44a; }
+    .ov-badge-ac { background: rgba(91,138,255,0.18); color: #5b8aff; }
+
   </style>
 </head>
 
@@ -1052,6 +1170,7 @@
     <div class="mode-tabs" id="mode-tabs">
       <button class="mode-tab" id="btn-write-mode">Write</button>
       <button class="mode-tab" id="btn-shots-mode">Shots</button>
+      <button class="mode-tab" id="btn-overview-mode">Overview</button>
     </div>
     <div class="header-actions">
       <button class="btn btn-secondary" id="new-script-btn" style="display:none">New Script</button>
@@ -1132,6 +1251,24 @@
     <div class="screenplay-editor-wrap">
       <div class="screenplay-editor" id="screenplay-editor"></div>
     </div>
+  </div>
+
+  <!-- ═══════════════════════════ OVERVIEW SCREEN ═══════════════════════════ -->
+  <div id="overview-screen">
+    <div class="overview-wrap">
+      <div class="overview-header">
+        <span class="overview-title">Script Overview</span>
+        <div class="overview-legend">
+          <span class="ov-legend-item"><span class="ov-legend-swatch dl"></span>Dialogue</span>
+          <span class="ov-legend-item"><span class="ov-legend-swatch ac"></span>Action</span>
+          <span class="ov-legend-note">Hover for scene details</span>
+        </div>
+      </div>
+      <div class="overview-chart-wrap" id="overview-chart-wrap">
+        <div class="overview-empty">Load a script to see its overview.</div>
+      </div>
+    </div>
+    <div class="overview-tooltip" id="overview-tooltip"></div>
   </div>
 
   <!-- ═══════════════════════════ MODAL ═══════════════════════════ -->
@@ -1461,10 +1598,12 @@
       currentMode = 'write';
       document.getElementById('upload-screen').style.display = 'none';
       document.getElementById('app').style.display = 'none';
+      document.getElementById('overview-screen').style.display = 'none';
       document.getElementById('write-screen').style.display = 'flex';
       document.getElementById('mode-tabs').style.display = 'flex';
       document.getElementById('btn-write-mode').classList.add('active');
       document.getElementById('btn-shots-mode').classList.remove('active');
+      document.getElementById('btn-overview-mode').classList.remove('active');
       document.getElementById('new-script-btn').style.display = 'block';
       document.getElementById('export-header-btn').style.display = 'none';
       localStorage.setItem('sts_mode', 'write');
@@ -1482,8 +1621,10 @@
       currentMode = 'shots';
       localStorage.setItem('sts_mode', 'shots');
       document.getElementById('write-screen').style.display = 'none';
+      document.getElementById('overview-screen').style.display = 'none';
       document.getElementById('btn-shots-mode').classList.add('active');
       document.getElementById('btn-write-mode').classList.remove('active');
+      document.getElementById('btn-overview-mode').classList.remove('active');
       // skipPersist=true prevents loadScript from overwriting saved annotations
       loadScript(text, currentFilename || 'Written Script', true);
       persistScript();
@@ -1536,6 +1677,187 @@
       a.click();
       URL.revokeObjectURL(a.href);
     }
+
+    // ── Overview mode ──
+
+    function switchToOverview() {
+      currentMode = 'overview';
+      document.getElementById('upload-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('write-screen').style.display = 'none';
+      document.getElementById('overview-screen').style.display = 'flex';
+      document.getElementById('mode-tabs').style.display = 'flex';
+      document.getElementById('btn-overview-mode').classList.add('active');
+      document.getElementById('btn-write-mode').classList.remove('active');
+      document.getElementById('btn-shots-mode').classList.remove('active');
+      document.getElementById('new-script-btn').style.display = 'block';
+      document.getElementById('export-header-btn').style.display = 'none';
+      renderOverview();
+    }
+
+    function renderOverview() {
+      const wrap = document.getElementById('overview-chart-wrap');
+      const tooltip = document.getElementById('overview-tooltip');
+
+      if (!tokens.length) {
+        wrap.innerHTML = '<div class="overview-empty">Load a script to see its overview.</div>';
+        return;
+      }
+
+      // 1. Aggregate per-scene stats
+      const sceneMap = new Map();
+      const sceneOrder = [];
+      tokens.forEach(function(t) {
+        if (!t.isWord) return;
+        var sn = t.scene ? t.scene.number : 0;
+        var name = t.scene ? t.scene.name : "(No Scene)";
+        if (!sceneMap.has(sn)) {
+          sceneMap.set(sn, { number: sn, name: name, total: 0, dialogue: 0, action: 0 });
+          sceneOrder.push(sn);
+        }
+        var s = sceneMap.get(sn);
+        s.total++;
+        if (t.elementType === "DIALOGUE" || t.elementType === "PARENTHETICAL") s.dialogue++;
+        if (t.elementType === "ACTION" || t.elementType === "SUBHEADER") s.action++;
+      });
+
+      var scenes = sceneOrder.map(function(sn) { return sceneMap.get(sn); });
+      var totalWords = scenes.reduce(function(a, s) { return a + s.total; }, 0);
+      if (!totalWords || !scenes.length) {
+        wrap.innerHTML = '<div class="overview-empty">No scenes detected in script.</div>';
+        return;
+      }
+
+      var maxDl = Math.max(1, Math.max.apply(null, scenes.map(function(s) { return s.dialogue; })));
+      var maxAc = Math.max(1, Math.max.apply(null, scenes.map(function(s) { return s.action; })));
+
+      // 2. Compute display widths (with per-scene minimum)
+      var MIN_W = 36;
+      var containerW = wrap.clientWidth || 900;
+      var naturalTotalW = Math.max(containerW, scenes.length * MIN_W);
+
+      var xCursor = 0;
+      scenes.forEach(function(s) {
+        var naturalPx = (s.total / totalWords) * naturalTotalW;
+        s.displayW = Math.max(MIN_W, naturalPx);
+        s.xStart = xCursor;
+        xCursor += s.displayW;
+        s.xEnd = xCursor;
+        s.xMid = (s.xStart + s.xEnd) / 2;
+        s.dlRatio = s.dialogue / maxDl;
+        s.acRatio = s.action / maxAc;
+        s.isPureDl = s.action === 0 && s.dialogue > 0;
+        s.isPureAc = s.dialogue === 0 && s.action > 0;
+      });
+
+      var svgW = xCursor;
+
+      // 3. Layout constants
+      var CHART_H = 210;
+      var SPARK_BASE = 150;   // y baseline for sparklines
+      var SPARK_H = 130;      // max upward height of peaks
+      var BAR_Y = 155;
+      var BAR_H = 30;
+
+      // 4. Build SVG path points
+      var dlPts = scenes.map(function(s) {
+        return s.xMid.toFixed(1) + "," + (SPARK_BASE - s.dlRatio * SPARK_H).toFixed(1);
+      }).join(" ");
+      var acPts = scenes.map(function(s) {
+        return s.xMid.toFixed(1) + "," + (SPARK_BASE - s.acRatio * SPARK_H).toFixed(1);
+      }).join(" ");
+
+      var dlArea = "M0," + SPARK_BASE + " L" + dlPts.split(" ").join(" L") + " L" + svgW.toFixed(1) + "," + SPARK_BASE + " Z";
+      var acArea = "M0," + SPARK_BASE + " L" + acPts.split(" ").join(" L") + " L" + svgW.toFixed(1) + "," + SPARK_BASE + " Z";
+
+      // 5. Build bar and dividers HTML
+      var barHtml = "";
+      var markerHtml = "";
+      var divHtml = "";
+
+      scenes.forEach(function(s, i) {
+        var fill = i % 2 === 0 ? "#181818" : "#202020";
+        var stripColor = s.isPureDl ? "#e8a44a" : (s.isPureAc ? "#5b8aff" : "#2e2e2e");
+        barHtml += '<rect x="' + s.xStart.toFixed(1) + '" y="' + BAR_Y + '" width="' + s.displayW.toFixed(1) + '" height="' + BAR_H + '" fill="' + fill + '" class="ov-seg" data-idx="' + i + '"/>';
+        barHtml += '<rect x="' + s.xStart.toFixed(1) + '" y="' + BAR_Y + '" width="' + s.displayW.toFixed(1) + '" height="2" fill="' + stripColor + '"/>';
+
+        // Scene number label if wide enough
+        if (s.displayW > 26) {
+          var lx = s.xMid.toFixed(1);
+          barHtml += '<text x="' + lx + '" y="' + (BAR_Y + BAR_H - 9) + '" text-anchor="middle" font-size="8" font-family="Courier New, monospace" fill="#555" class="ov-seg" data-idx="' + i + '">' + s.number + '</text>';
+        }
+
+        // Separator line between segments
+        if (i < scenes.length - 1) {
+          barHtml += '<line x1="' + s.xEnd.toFixed(1) + '" y1="' + BAR_Y + '" x2="' + s.xEnd.toFixed(1) + '" y2="' + (BAR_Y + BAR_H) + '" stroke="#0a0a0a" stroke-width="1"/>';
+          divHtml += '<line x1="' + s.xEnd.toFixed(1) + '" y1="0" x2="' + s.xEnd.toFixed(1) + '" y2="' + SPARK_BASE + '" stroke="#1e1e1e" stroke-width="0.5" stroke-dasharray="2,4"/>';
+        }
+
+        // Pure-scene dot marker on the dominant sparkline
+        if (s.isPureDl) {
+          var cy = (SPARK_BASE - s.dlRatio * SPARK_H).toFixed(1);
+          markerHtml += '<circle cx="' + s.xMid.toFixed(1) + '" cy="' + cy + '" r="4" fill="#e8a44a" stroke="#000" stroke-width="1.5"/>';
+        }
+        if (s.isPureAc) {
+          var cy2 = (SPARK_BASE - s.acRatio * SPARK_H).toFixed(1);
+          markerHtml += '<circle cx="' + s.xMid.toFixed(1) + '" cy="' + cy2 + '" r="4" fill="#5b8aff" stroke="#000" stroke-width="1.5"/>';
+        }
+      });
+
+      // Invisible full-height hover rects
+      var hoverHtml = "";
+      scenes.forEach(function(s, i) {
+        hoverHtml += '<rect class="ov-hover" x="' + s.xStart.toFixed(1) + '" y="0" width="' + s.displayW.toFixed(1) + '" height="' + CHART_H + '" fill="transparent" data-idx="' + i + '" style="cursor:default"/>';
+      });
+
+      // 6. Compose SVG
+      var svg = '<svg id="overview-svg" width="' + svgW.toFixed(0) + '" height="' + CHART_H + '" xmlns="http://www.w3.org/2000/svg">'
+        + '<defs>'
+        + '<linearGradient id="ov-dl-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e8a44a" stop-opacity="0.55"/><stop offset="100%" stop-color="#e8a44a" stop-opacity="0.04"/></linearGradient>'
+        + '<linearGradient id="ov-ac-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#5b8aff" stop-opacity="0.55"/><stop offset="100%" stop-color="#5b8aff" stop-opacity="0.04"/></linearGradient>'
+        + '</defs>'
+        + divHtml
+        + '<path d="' + acArea + '" fill="url(#ov-ac-g)"/>'
+        + '<path d="' + dlArea + '" fill="url(#ov-dl-g)"/>'
+        + '<polyline points="' + acPts + '" fill="none" stroke="#5b8aff" stroke-width="1.5" opacity="0.9" stroke-linejoin="round"/>'
+        + '<polyline points="' + dlPts + '" fill="none" stroke="#e8a44a" stroke-width="1.5" opacity="0.9" stroke-linejoin="round"/>'
+        + markerHtml
+        + barHtml
+        + hoverHtml
+        + '</svg>';
+
+      wrap.innerHTML = svg;
+
+      // 7. Wire hover tooltip
+      wrap.querySelectorAll(".ov-hover").forEach(function(rect) {
+        rect.addEventListener("mouseenter", function() {
+          var s = scenes[parseInt(this.getAttribute("data-idx"))];
+          var dlPct = s.total ? Math.round(s.dialogue / s.total * 100) : 0;
+          var acPct = s.total ? Math.round(s.action / s.total * 100) : 0;
+          var badge = s.isPureDl ? '<span class="ov-tt-badge ov-badge-dl">Pure Dialogue</span>' :
+                      (s.isPureAc ? '<span class="ov-tt-badge ov-badge-ac">Pure Action</span>' : "");
+          tooltip.innerHTML = '<div class="ov-tt-title">' + s.number + '. ' + s.name.replace(/</g,"&lt;") + '</div>'
+            + '<div class="ov-tt-row"><span><span class="ov-tt-dl">&#9632;</span> Dialogue</span><span>' + s.dialogue + ' words (' + dlPct + '%)</span></div>'
+            + '<div class="ov-tt-row"><span><span class="ov-tt-ac">&#9632;</span> Action</span><span>' + s.action + ' words (' + acPct + '%)</span></div>'
+            + '<div class="ov-tt-row"><span style="color:var(--text-dim)">Total</span><span>' + s.total + ' words</span></div>'
+            + badge;
+          tooltip.style.display = "block";
+        });
+        rect.addEventListener("mousemove", function(e) {
+          tooltip.style.left = (e.clientX + 14) + "px";
+          tooltip.style.top = (e.clientY - tooltip.offsetHeight - 10) + "px";
+        });
+        rect.addEventListener("mouseleave", function() {
+          tooltip.style.display = "none";
+        });
+      });
+    }
+
+    document.getElementById("btn-overview-mode").addEventListener("click", function() {
+      if (currentMode === "overview") return;
+      if (currentMode === "write") { saveEditorElements(); }
+      switchToOverview();
+    });
 
     // Convert loaded tokens back into editor element array
     function convertTokensToEditorElements() {
@@ -1703,10 +2025,12 @@
         currentMode = 'shots';
         document.getElementById('upload-screen').style.display = 'none';
         document.getElementById('write-screen').style.display = 'none';
+        document.getElementById('overview-screen').style.display = 'none';
         document.getElementById('app').style.display = 'block';
         document.getElementById('mode-tabs').style.display = 'flex';
         document.getElementById('btn-shots-mode').classList.add('active');
         document.getElementById('btn-write-mode').classList.remove('active');
+        document.getElementById('btn-overview-mode').classList.remove('active');
         document.getElementById('new-script-btn').style.display = 'block';
         document.getElementById('export-header-btn').style.display = 'block';
         buildGrids();
@@ -2327,6 +2651,7 @@
       } catch(e) {}
       document.getElementById('app').style.display = 'none';
       document.getElementById('write-screen').style.display = 'none';
+      document.getElementById('overview-screen').style.display = 'none';
       document.getElementById('mode-tabs').style.display = 'none';
       document.getElementById('upload-screen').style.display = 'flex';
       document.getElementById('new-script-btn').style.display = 'none';
