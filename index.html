@@ -999,6 +999,30 @@
       padding-right: 10px;
     }
 
+    /* ── Page break divider ── */
+    .page-break-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 26px 0 20px;
+      user-select: none;
+      pointer-events: none;
+    }
+    .page-break-divider::before,
+    .page-break-divider::after {
+      content: '';
+      flex: 1;
+      border-top: 1px dashed var(--border);
+    }
+    .page-break-divider .pb-label {
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      font-family: 'Courier New', monospace;
+      opacity: 0.5;
+    }
+
     /* NOTE */
     .script-line[data-type="note"] {
       color: var(--text-dim);
@@ -1275,11 +1299,12 @@
 
       div.addEventListener('keydown', editorKeydown);
 
-      // debounced save on input
+      // debounced save + page break recalc on input
       let saveTimer;
       div.addEventListener('input', function() {
         clearTimeout(saveTimer);
         saveTimer = setTimeout(saveEditorElements, 500);
+        schedulePageBreaks();
       });
 
       return div;
@@ -1301,6 +1326,7 @@
         setLineType(line, next);
         updateElemLabel(next);
         saveEditorElements();
+        schedulePageBreaks();
         return;
       }
 
@@ -1353,6 +1379,7 @@
       editor.innerHTML = '';
       const toLoad = (elements && elements.length) ? elements : [{ type: 'scene', text: '' }];
       toLoad.forEach(el => editor.appendChild(createEditorLine(el.type, el.text)));
+      renderPageBreaks();
     }
 
     function saveEditorElements() {
@@ -1363,6 +1390,51 @@
         text: l.textContent
       }));
       try { localStorage.setItem('sts_elements', JSON.stringify(data)); } catch(e) {}
+    }
+
+    // ── Page break calculation ──
+    // Approximate chars-per-line and extra spacing-units per element type.
+    // Based on a 660px Courier New 13px container (~54 usable lines per page).
+    const PB_CHARS = { scene:65, action:65, character:42, dialogue:50, parenthetical:40, transition:65 };
+    const PB_SPACING = { scene:1.5, character:1.0, transition:1.0 }; // extra line units for margin-top
+    const PB_PAGE_LINES = 54;
+
+    function renderPageBreaks() {
+      const editor = document.getElementById('screenplay-editor');
+      if (!editor) return;
+      // Remove existing dividers
+      editor.querySelectorAll('.page-break-divider').forEach(d => d.remove());
+      const lines = [...editor.querySelectorAll('.script-line')];
+      if (!lines.length) return;
+
+      let lineCount = 0;
+      let pageNum = 1;
+
+      lines.forEach((line, i) => {
+        const type = line.dataset.type || 'action';
+        const text = line.textContent || '';
+        const charsPerLine = PB_CHARS[type] || 65;
+        const spacingBefore = PB_SPACING[type] || 0;
+        const linesForText = Math.max(1, Math.ceil(text.length / charsPerLine));
+
+        lineCount += spacingBefore + linesForText;
+
+        if (lineCount >= PB_PAGE_LINES && i < lines.length - 1) {
+          pageNum++;
+          const divider = document.createElement('div');
+          divider.className = 'page-break-divider';
+          divider.contentEditable = 'false';
+          divider.innerHTML = '<span class="pb-label">Page ' + pageNum + '</span>';
+          line.after(divider);
+          lineCount = linesForText; // reset counter for new page
+        }
+      });
+    }
+
+    let pbTimer;
+    function schedulePageBreaks() {
+      clearTimeout(pbTimer);
+      pbTimer = setTimeout(renderPageBreaks, 800);
     }
 
     function serializeEditorToText() {
@@ -1442,6 +1514,8 @@
         .forEach(([, line]) => {
           const text = line.parts.join('').trim();
           if (!text) return;
+          if (/^\d+\.?\s*$/.test(text)) return; // skip page numbers
+          if (line.elementType === 'EMPTY') return;
           elements.push({ type: TOKEN_TO_EDITOR[line.elementType] || 'action', text });
         });
       return elements.length ? elements : null;
@@ -1450,8 +1524,21 @@
     // ── Header mode tab wiring ──
     document.getElementById('btn-write-mode').addEventListener('click', function() {
       if (currentMode === 'write') return;
-      // Coming from shots mode with a loaded script — reconstruct editor from tokens
       if (currentMode === 'shots' && tokens.length) {
+        // Prefer saved sts_elements (accurate types from when user wrote/edited)
+        // Only fall back to token conversion for scripts uploaded without prior write session
+        const saved = localStorage.getItem('sts_elements');
+        if (saved) {
+          try {
+            const elements = JSON.parse(saved);
+            if (elements && elements.length) {
+              loadEditorElements(elements);
+              switchToWrite();
+              return;
+            }
+          } catch(e) {}
+        }
+        // No saved elements — this is an uploaded script, convert from tokens
         const elements = convertTokensToEditorElements();
         if (elements) {
           loadEditorElements(elements);
@@ -1597,6 +1684,12 @@
         if (!trimmed) {
           types.push('EMPTY');
           afterChar = false;
+          continue;
+        }
+
+        // Page numbers — standalone digits (e.g. "42" or "42.") from PDF/Word exports
+        if (/^\d+\.?\s*$/.test(trimmed)) {
+          types.push('EMPTY');
           continue;
         }
 
