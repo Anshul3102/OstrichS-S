@@ -955,7 +955,8 @@
       font-weight: 700;
       color: #ffffff;
       margin-top: 22px;
-      letter-spacing: 0.3px;
+      letter-spacing: 1.2px;
+      font-size: 13.5px;
     }
     .script-line[data-type="scene"]:first-child { margin-top: 0; }
 
@@ -968,7 +969,9 @@
     /* CHARACTER */
     .script-line[data-type="character"] {
       text-transform: uppercase;
-      font-weight: 600;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.5px;
       margin-left: 210px;
       margin-top: 16px;
       color: var(--accent);
@@ -1554,7 +1557,9 @@
       const editor = document.getElementById('screenplay-editor');
       editor.innerHTML = '';
       const toLoad = (elements && elements.length) ? elements : [{ type: 'scene', text: '' }];
-      toLoad.forEach(el => editor.appendChild(createEditorLine(el.type, el.text)));
+      const frag = document.createDocumentFragment();
+      toLoad.forEach(el => frag.appendChild(createEditorLine(el.type, el.text)));
+      editor.appendChild(frag); // single DOM insertion instead of one per line
       renderPageBreaks();
     }
 
@@ -2571,46 +2576,48 @@
     // RENDER SCRIPT
     // ─────────────────────────────────────────────────────────────────
 
+    function _htEsc(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
     function renderScript() {
       const container = document.getElementById('script-content');
-      container.innerHTML = '';
       spanMap.clear();
 
-      // Build shot-number map once — O(n) instead of O(n²)
       const annotated = tokens.filter(t => t.isWord && t.annotation);
       const shotNumMap = new Map(annotated.map((t, i) => [t.id, i + 1]));
 
-      const frag = document.createDocumentFragment();
+      // Build HTML as a string — browser's C++ parser is 3-5× faster than
+      // creating 32K+ DOM nodes one-by-one from JS for large scripts
+      let html = '';
       tokens.forEach(tok => {
         if (tok.isWord) {
-          const span = document.createElement('span');
           const needsRevision = tok.annotation && tok.annotation.needsRevision;
-          span.className = 'word-token'
+          const cls = 'word-token'
             + (tok.annotation ? ' annotated' : '')
             + (needsRevision ? ' needs-revision' : '')
             + (tok.isHeading ? ' is-heading' : '')
             + (tok.elementType && !tok.isHeading ? ' elem-' + tok.elementType : '');
-          span.dataset.id = tok.id;
-          span.textContent = tok.text;
-          if (tok.annotation) {
-            const badge = document.createElement('sup');
-            badge.className = 'shot-badge' + (needsRevision ? ' revision' : '');
-            badge.textContent = shotNumMap.get(tok.id);
-            span.appendChild(badge);
-          }
-          span.addEventListener('click', () => openModal(tok.id));
-          spanMap.set(tok.id, span);
-          frag.appendChild(span);
+          const shotNum = shotNumMap.get(tok.id);
+          const badge = shotNum !== undefined
+            ? '<sup class="shot-badge' + (needsRevision ? ' revision' : '') + '">' + shotNum + '</sup>'
+            : '';
+          html += '<span class="' + cls + '" data-id="' + tok.id + '">' + _htEsc(tok.text) + badge + '</span>';
         } else {
           if (tok.text.includes('\n')) {
-            const n = (tok.text.match(/\n/g) || []).length;
-            for (let i = 0; i < n; i++) frag.appendChild(document.createElement('br'));
+            html += '<br>'.repeat((tok.text.match(/\n/g) || []).length);
           } else {
-            frag.appendChild(document.createTextNode(tok.text));
+            html += _htEsc(tok.text);
           }
         }
       });
-      container.appendChild(frag);
+
+      container.innerHTML = html;
+
+      // Rebuild spanMap from the new DOM in one pass
+      container.querySelectorAll('[data-id]').forEach(span => {
+        spanMap.set(parseInt(span.dataset.id, 10), span);
+      });
     }
 
     // Updates annotation classes/badges without rebuilding DOM nodes
@@ -2806,6 +2813,12 @@
       persistAnnotations();
       syncReviewTab(savedId);
     }
+
+    // Single delegated click handler for the whole script panel — replaces per-span listeners
+    document.getElementById('script-content').addEventListener('click', function(e) {
+      const span = e.target.closest('.word-token');
+      if (span) openModal(parseInt(span.dataset.id, 10));
+    });
 
     document.getElementById('save-shot-btn').addEventListener('click', saveShot);
     document.getElementById('cancel-modal-btn').addEventListener('click', closeModal);
