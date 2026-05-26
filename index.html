@@ -1215,10 +1215,10 @@
     <div class="upload-box" id="drop-zone">
       <div class="upload-icon">🎬</div>
       <h2>Upload Your Script</h2>
-      <p>Drop a <strong>.txt</strong> file or paste your script text below</p>
-      <input type="file" id="file-input" style="display:none">
+      <p>Drop a <strong>.txt</strong>, <strong>.fdx</strong>, or <strong>.pdf</strong> file, or paste your script text below</p>
+      <input type="file" id="file-input" accept=".txt,.fdx,.fountain,.pdf" style="display:none">
       <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">
-        Choose File (.txt / .fdx / .fountain)
+        Choose File (.txt / .fdx / .pdf)
       </button>
       <div class="upload-divider">or paste script below</div>
       <textarea class="paste-area" id="paste-area"
@@ -2107,19 +2107,129 @@
       e.preventDefault();
       dropZone.classList.remove('drag-over');
       const f = e.dataTransfer.files[0];
-      if (f) { const r = new FileReader(); r.onload = ev => handleUploadedScript(ev.target.result, f.name); r.readAsText(f); }
+      if (f) readAndHandleFile(f);
     });
 
     fileInput.addEventListener('change', () => {
       const f = fileInput.files[0];
-      if (f) { const r = new FileReader(); r.onload = ev => handleUploadedScript(ev.target.result, f.name); r.readAsText(f); }
+      if (f) readAndHandleFile(f);
     });
+
+    function readAndHandleFile(f) {
+      var ext = f.name.split('.').pop().toLowerCase();
+      if (ext === 'pdf' || f.type === 'application/pdf') {
+        var r = new FileReader();
+        r.onload = function(ev) { handlePDFUpload(ev.target.result, f.name); };
+        r.readAsArrayBuffer(f);
+      } else {
+        var r = new FileReader();
+        r.onload = function(ev) { handleUploadedScript(ev.target.result, f.name); };
+        r.readAsText(f);
+      }
+    }
 
     document.getElementById('load-paste-btn').addEventListener('click', () => {
       const t = pasteArea.value.trim();
       if (t) handleUploadedScript(t);
       else alert('Please paste some script text first.');
     });
+
+    // ── PDF support via PDF.js (loaded lazily from CDN on first use) ──
+
+    function loadPdfJs() {
+      return new Promise(function(resolve, reject) {
+        if (window.pdfjsLib) { resolve(); return; }
+        var script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+        script.onload = function() {
+          pdfjsLib.GlobalWorkerOptions.workerSrc =
+            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+          resolve();
+        };
+        script.onerror = function() {
+          reject(new Error('Could not load the PDF library. An internet connection is required the first time a PDF is opened.'));
+        };
+        document.head.appendChild(script);
+      });
+    }
+
+    async function handlePDFUpload(arrayBuffer, filename) {
+      var icon = document.querySelector('.upload-icon');
+      var origIcon = icon ? icon.textContent : '';
+      if (icon) icon.textContent = '⏳';
+
+      try {
+        await loadPdfJs();
+
+        var pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        var allLines = [];     // { x, text }
+        var widthSum = 0, charSum = 0;
+
+        for (var p = 1; p <= pdf.numPages; p++) {
+          var page = await pdf.getPage(p);
+          var viewport = page.getViewport({ scale: 1.0 });
+          var tc = await page.getTextContent();
+
+          // Group text items by approximate y-position (same line = within 5pt)
+          var yMap = new Map();
+          tc.items.forEach(function(item) {
+            if (typeof item.str === 'undefined') return; // skip marked-content markers
+            var x = item.transform[4];
+            var y = viewport.height - item.transform[5]; // flip: top = 0
+            var yKey = Math.round(y / 5) * 5;
+            if (!yMap.has(yKey)) yMap.set(yKey, []);
+            yMap.get(yKey).push({ x: x, str: item.str });
+            // Accumulate for char-width estimation
+            if (item.str.trim() && item.width > 0) {
+              widthSum += item.width;
+              charSum += item.str.length;
+            }
+          });
+
+          // Sort lines top-to-bottom, items left-to-right within each line
+          var pageLines = [...yMap.entries()]
+            .sort(function(a, b) { return a[0] - b[0]; })
+            .map(function(entry) {
+              var items = entry[1].sort(function(a, b) { return a.x - b.x; });
+              return { x: items[0].x, text: items.map(function(i) { return i.str; }).join('') };
+            });
+
+          allLines = allLines.concat(pageLines);
+          allLines.push({ x: 0, text: '' }); // blank between pages
+        }
+
+        // Validate text was found
+        var nonEmpty = allLines.filter(function(l) { return l.text.trim(); });
+        if (!nonEmpty.length) {
+          throw new Error('No text could be extracted from this PDF.\nIt may be a scanned image — please export as .txt from your screenwriting app instead.');
+        }
+
+        // Left margin = minimum x across all content lines
+        var minX = nonEmpty.reduce(function(m, l) { return Math.min(m, l.x); }, Infinity);
+
+        // Character width: derived from PDF font metrics when available, otherwise 7.2pt (Courier 12pt)
+        var charWidth = charSum > 20 ? widthSum / charSum : 7.2;
+
+        // Reconstruct indented text — x-offset → leading spaces
+        // This maps screenplay columns (action=0, dialogue=~10, character=~22) that
+        // detectLineTypesIndented understands
+        var textLines = allLines.map(function(l) {
+          if (!l.text.trim()) return '';
+          var indent = Math.max(0, Math.round((l.x - minX) / charWidth));
+          return ' '.repeat(indent) + l.text;
+        });
+
+        var extractedText = textLines.join('\n');
+        var baseName = filename.replace(/\.pdf$/i, '');
+        handleUploadedScript(extractedText, baseName + '.txt');
+
+      } catch (err) {
+        alert('Error reading PDF: ' + err.message);
+        console.error(err);
+      } finally {
+        if (icon) icon.textContent = origIcon;
+      }
+    }
 
     function handleUploadedScript(text, filename) {
       try {
