@@ -960,6 +960,7 @@
     let draft = {};       // temporary annotation being built in modal
     let currentScriptText = '';
     let currentFilename = '';
+    let reviewWindow = null;  // reference to open review tab
 
     const ELEM_LABEL = {
       SCENE_HEADING: 'Scene Heading',
@@ -1018,7 +1019,10 @@
         renderScript();
         renderShotList();
         updateStats();
-        if (!skipPersist) persistSession();
+        if (!skipPersist) {
+          persistScript();       // save script text
+          persistAnnotations();  // save (empty) annotation set for this new script
+        }
       } catch (err) {
         alert('Error loading script: ' + err.message);
         console.error(err);
@@ -1426,24 +1430,28 @@
 
     function saveShot() {
       if (activeId === null) return;
+      const savedId = activeId;
       draft.notes = document.getElementById('shot-notes').value.trim();
       const hasAny = draft.shotType || draft.angle || (draft.movements && draft.movements.length) || draft.motion || draft.notes;
-      tokenMap.get(activeId).annotation = hasAny ? { ...draft, needsRevision: false } : null;
+      tokenMap.get(savedId).annotation = hasAny ? { ...draft, needsRevision: false } : null;
       closeModal();
       refreshAnnotationDisplay();
       renderShotList();
       updateStats();
-      persistSession();
+      persistAnnotations();
+      syncReviewTab(savedId);
     }
 
     function removeShot() {
       if (activeId === null) return;
-      tokenMap.get(activeId).annotation = null;
+      const savedId = activeId;
+      tokenMap.get(savedId).annotation = null;
       closeModal();
       refreshAnnotationDisplay();
       renderShotList();
       updateStats();
-      persistSession();
+      persistAnnotations();
+      syncReviewTab(savedId);
     }
 
     document.getElementById('save-shot-btn').addEventListener('click', saveShot);
@@ -1542,9 +1550,8 @@
       tokens = [];
       currentScriptText = '';
       currentFilename = '';
-      localStorage.removeItem('sts_script');
-      localStorage.removeItem('sts_filename');
-      localStorage.removeItem('sts_annotations');
+      reviewWindow = null;
+      try { localStorage.removeItem('sts_script'); localStorage.removeItem('sts_filename'); localStorage.removeItem('sts_annotations'); } catch(e) {}
       document.getElementById('app').style.display = 'none';
       document.getElementById('upload-screen').style.display = 'flex';
       document.getElementById('new-script-btn').style.display = 'none';
@@ -1650,7 +1657,8 @@
     `;
       });
 
-      const win = window.open('', '_blank');
+      reviewWindow = window.open('', '_blank');
+      const win = reviewWindow;
       win.document.write(`<!DOCTYPE html><html><head><title>Shot List Review</title><style>
     *{box-sizing:border-box}
     body{font-family:Arial,sans-serif;max-width:1100px;margin:0 auto;color:#111;padding:0}
@@ -1709,6 +1717,25 @@
         window.opener.toggleRevision(tokenId, checked);
       }
     }
+    window.syncShot = function(tokenId, data) {
+      var row = document.getElementById('row-' + tokenId);
+      if (!row) return;
+      if (data) {
+        row.classList.remove('revision-row');
+        var cb = row.querySelector('input[type=checkbox]');
+        if (cb) cb.checked = false;
+        row.cells[5].textContent = data.shotName;
+        row.cells[6].textContent = data.angleName;
+        row.cells[7].textContent = data.moveList;
+        row.cells[8].textContent = data.motion;
+        row.cells[9].textContent = data.notes;
+      } else {
+        row.style.opacity = '0.35';
+        row.style.textDecoration = 'line-through';
+        var cb2 = row.querySelector('input[type=checkbox]');
+        if (cb2) cb2.disabled = true;
+      }
+    };
   <\/script>
   </body></html>`);
       win.document.close();
@@ -1721,7 +1748,7 @@
       tok.annotation.needsRevision = needsRevision;
       refreshAnnotationDisplay();
       renderShotList();
-      persistSession();
+      persistAnnotations();
     };
 
     document.getElementById('export-csv-btn').addEventListener('click', exportCSV);
@@ -1734,19 +1761,23 @@
 
     // ─────────────────────────────────────────────────────────────────
     // PERSISTENCE  — localStorage  (survives refresh, cleared by New Script)
+    // Script and annotations are stored separately so loading a script
+    // never clobbers existing annotation data.
     // ─────────────────────────────────────────────────────────────────
 
-    function persistSession() {
-      if (!currentScriptText) return;
+    function persistScript() {
+      try {
+        localStorage.setItem('sts_script', currentScriptText);
+        localStorage.setItem('sts_filename', currentFilename);
+      } catch(e) { console.warn('persistScript failed:', e); }
+    }
+
+    function persistAnnotations() {
       try {
         const annotations = {};
         tokens.forEach(t => { if (t.isWord && t.annotation) annotations[t.id] = t.annotation; });
-        localStorage.setItem('sts_script', currentScriptText);
-        localStorage.setItem('sts_filename', currentFilename);
         localStorage.setItem('sts_annotations', JSON.stringify(annotations));
-      } catch (e) {
-        console.warn('Could not persist session (storage full?):', e);
-      }
+      } catch(e) { console.warn('persistAnnotations failed:', e); }
     }
 
     (function restoreSession() {
@@ -1754,18 +1785,47 @@
       if (!savedScript) return;
       const savedFilename = localStorage.getItem('sts_filename') || '';
       const savedAnnotations = localStorage.getItem('sts_annotations');
-      // skipPersist=true so we don't overwrite the stored annotations before restoring them
-      loadScript(savedScript, savedFilename, true);
+      loadScript(savedScript, savedFilename, true); // skipPersist — don't touch stored annotations
       if (savedAnnotations) {
         try {
           const annotations = JSON.parse(savedAnnotations);
-          tokens.forEach(t => { if (t.isWord && annotations[t.id]) t.annotation = annotations[t.id]; });
-          refreshAnnotationDisplay();
-          renderShotList();
-          updateStats();
-        } catch (e) { console.warn('Could not restore annotations:', e); }
+          let restored = 0;
+          tokens.forEach(t => {
+            if (t.isWord && annotations[t.id] != null) {
+              t.annotation = annotations[t.id];
+              restored++;
+            }
+          });
+          if (restored > 0) {
+            refreshAnnotationDisplay();
+            renderShotList();
+            updateStats();
+          }
+        } catch(e) { console.warn('Could not restore annotations:', e); }
       }
     })();
+
+    // ─────────────────────────────────────────────────────────────────
+    // REVIEW TAB SYNC
+    // ─────────────────────────────────────────────────────────────────
+
+    function syncReviewTab(tokenId) {
+      if (!reviewWindow || reviewWindow.closed) return;
+      if (typeof reviewWindow.syncShot !== 'function') return;
+      const tok = tokenMap.get(tokenId);
+      const a = tok ? tok.annotation : null;
+      if (a) {
+        reviewWindow.syncShot(tokenId, {
+          shotName:  a.shotType   ? (SHOT_TYPES.find(s => s.id === a.shotType)?.name  || '') : '—',
+          angleName: a.angle      ? (ANGLES.find(s => s.id === a.angle)?.name          || '') : '—',
+          moveList:  (a.movements || []).map(mv => MOVEMENTS.find(s => s.id === mv)?.name).filter(Boolean).join(', ') || '—',
+          motion:    a.motion     ? (a.motion.charAt(0).toUpperCase() + a.motion.slice(1)) : '—',
+          notes:     a.notes      || ''
+        });
+      } else {
+        reviewWindow.syncShot(tokenId, null);
+      }
+    }
 
     document.getElementById('motion-static').addEventListener('click', () => toggleMotion('static'));
     document.getElementById('motion-moving').addEventListener('click', () => toggleMotion('moving'));
