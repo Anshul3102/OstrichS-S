@@ -1,11 +1,16 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Script to Shots</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
     :root {
       --bg: #0a0a0f;
@@ -40,10 +45,20 @@
       z-index: 10;
     }
 
-    .logo { font-size: 18px; font-weight: 700; letter-spacing: 2px; }
-    .logo .accent { color: var(--accent); }
+    .logo {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 2px;
+    }
 
-    .header-actions { display: flex; gap: 10px; }
+    .logo .accent {
+      color: var(--accent);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
 
     /* ── Buttons ── */
     .btn {
@@ -53,23 +68,39 @@
       cursor: pointer;
       font-size: 13px;
       font-weight: 600;
-      transition: background-color 0.18s, border-color 0.18s, color 0.18s;
+      transition: all 0.18s;
     }
-    .btn-primary { background: var(--accent); color: #000; }
-    .btn-primary:hover { background: var(--accent2); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #000;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent2);
+    }
+
     .btn-secondary {
       background: var(--surface2);
       color: var(--text);
       border: 1px solid var(--border);
     }
-    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
     .btn-danger {
       background: rgba(255, 60, 60, 0.1);
       border: 1px solid #ff4444;
       color: #ff4444;
       margin-right: auto;
     }
-    .btn-danger:hover { background: rgba(255, 60, 60, 0.22); }
+
+    .btn-danger:hover {
+      background: rgba(255, 60, 60, 0.22);
+    }
 
     /* ── Upload Screen ── */
     #upload-screen {
@@ -89,17 +120,42 @@
       width: 92%;
       transition: border-color 0.2s;
     }
-    .upload-box.drag-over { border-color: var(--accent); }
-    .upload-icon { font-size: 52px; margin-bottom: 18px; }
-    .upload-box h2 { font-size: 24px; margin-bottom: 8px; }
-    .upload-box p { color: var(--text-dim); margin-bottom: 22px; font-size: 15px; }
+
+    .upload-box.drag-over {
+      border-color: var(--accent);
+    }
+
+    .upload-icon {
+      font-size: 52px;
+      margin-bottom: 18px;
+    }
+
+    .upload-box h2 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .upload-box p {
+      color: var(--text-dim);
+      margin-bottom: 22px;
+      font-size: 15px;
+    }
 
     .upload-divider {
-      display: flex; align-items: center; gap: 14px;
-      margin: 22px 0; color: var(--text-dim); font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 22px 0;
+      color: var(--text-dim);
+      font-size: 13px;
     }
-    .upload-divider::before, .upload-divider::after {
-      content: ''; flex: 1; height: 1px; background: var(--border);
+
+    .upload-divider::before,
+    .upload-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
     }
 
     textarea.paste-area {
@@ -114,11 +170,23 @@
       min-height: 110px;
       font-family: inherit;
     }
-    textarea.paste-area:focus { outline: none; border-color: var(--accent); }
-    .paste-actions { margin-top: 14px; display: flex; gap: 10px; justify-content: center; }
+
+    textarea.paste-area:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .paste-actions {
+      margin-top: 14px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
 
     /* ── App Layout ── */
-    #app { display: none; }
+    #app {
+      display: none;
+    }
 
     .stats-bar {
       padding: 7px 28px;
@@ -130,7 +198,10 @@
       color: var(--text-dim);
       flex-wrap: wrap;
     }
-    .stats-bar b { color: var(--accent); }
+
+    .stats-bar b {
+      color: var(--accent);
+    }
 
     .layout {
       display: grid;
@@ -161,12 +232,20 @@
       transition: background 0.15s;
       display: inline;
     }
-    .word-token:hover { background: rgba(232, 160, 32, 0.12); outline: 1px solid rgba(232, 160, 32, 0.35); }
+
+    .word-token:hover {
+      background: rgba(232, 160, 32, 0.12);
+      outline: 1px solid rgba(232, 160, 32, 0.35);
+    }
+
     .word-token.annotated {
       background: var(--annotated-bg);
       border-bottom: 2px solid var(--annotated-border);
     }
-    .word-token.annotated:hover { background: rgba(232, 160, 32, 0.32); }
+
+    .word-token.annotated:hover {
+      background: rgba(232, 160, 32, 0.32);
+    }
 
     .shot-badge {
       display: inline-block;
@@ -197,6 +276,7 @@
       align-items: center;
       justify-content: space-between;
     }
+
     .panel-header h3 {
       font-size: 11px;
       font-weight: 700;
@@ -204,6 +284,7 @@
       text-transform: uppercase;
       letter-spacing: 1.5px;
     }
+
     .count-badge {
       background: var(--accent);
       color: #000;
@@ -213,7 +294,11 @@
       border-radius: 12px;
     }
 
-    #shot-list { flex: 1; overflow-y: auto; padding: 10px; }
+    #shot-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
 
     .shot-card {
       background: var(--surface2);
@@ -224,50 +309,118 @@
       cursor: pointer;
       transition: border-color 0.18s;
     }
-    .shot-card:hover { border-color: var(--accent); }
-    .shot-num { font-size: 10px; color: var(--accent); font-weight: 700; margin-bottom: 3px; letter-spacing: 1px; }
-    .shot-word { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
-    .shot-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+
+    .shot-card:hover {
+      border-color: var(--accent);
+    }
+
+    .shot-num {
+      font-size: 10px;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 3px;
+      letter-spacing: 1px;
+    }
+
+    .shot-word {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .shot-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
 
     .tag {
-      font-size: 11px; padding: 2px 7px; border-radius: 10px;
-      background: var(--bg); border: 1px solid var(--border); color: var(--text-dim);
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
     }
-    .tag.t-shot  { border-color: #4a9eff; color: #4a9eff; }
-    .tag.t-angle { border-color: #c04aff; color: #c04aff; }
-    .tag.t-move  { border-color: #3dd68c; color: #3dd68c; }
-    .tag.t-static  { border-color: #888; color: #aaa; }
-    .tag.t-moving  { border-color: #ff7046; color: #ff7046; }
+
+    .tag.t-shot {
+      border-color: #4a9eff;
+      color: #4a9eff;
+    }
+
+    .tag.t-angle {
+      border-color: #c04aff;
+      color: #c04aff;
+    }
+
+    .tag.t-move {
+      border-color: #3dd68c;
+      color: #3dd68c;
+    }
+
+    .tag.t-static {
+      border-color: #888;
+      color: #aaa;
+    }
+
+    .tag.t-moving {
+      border-color: #ff7046;
+      color: #ff7046;
+    }
 
     .shot-notes-preview {
-      margin-top: 7px; font-size: 11px;
-      color: var(--text-dim); font-style: italic;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-top: 7px;
+      font-size: 11px;
+      color: var(--text-dim);
+      font-style: italic;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .empty-state {
-      text-align: center; padding: 44px 16px; color: var(--text-dim);
+      text-align: center;
+      padding: 44px 16px;
+      color: var(--text-dim);
     }
-    .empty-state .icon { font-size: 36px; margin-bottom: 10px; }
-    .empty-state p { font-size: 13px; line-height: 1.6; }
+
+    .empty-state .icon {
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+
+    .empty-state p {
+      font-size: 13px;
+      line-height: 1.6;
+    }
 
     .panel-footer {
       padding: 10px;
       border-top: 1px solid var(--border);
-      display: flex; gap: 8px;
+      display: flex;
+      gap: 8px;
     }
-    .panel-footer .btn { flex: 1; font-size: 12px; padding: 7px; }
+
+    .panel-footer .btn {
+      flex: 1;
+      font-size: 12px;
+      padding: 7px;
+    }
 
     /* ── Modal ── */
     .modal-backdrop {
       display: none;
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.82);
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.82);
       z-index: 200;
       align-items: center;
       justify-content: center;
     }
-    .modal-backdrop.open { display: flex; }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
 
     .modal {
       background: var(--surface);
@@ -277,7 +430,7 @@
       max-width: 96vw;
       max-height: 92vh;
       overflow-y: auto;
-      box-shadow: 0 28px 80px rgba(0,0,0,0.6);
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.6);
       display: flex;
       flex-direction: column;
     }
@@ -288,19 +441,39 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      position: sticky; top: 0;
+      position: sticky;
+      top: 0;
       background: var(--surface);
       z-index: 1;
     }
-    .modal-title { font-size: 17px; font-weight: 600; }
-    .modal-title .word-hl { color: var(--accent); font-style: italic; }
-    .close-btn {
-      background: none; border: none; color: var(--text-dim);
-      font-size: 26px; cursor: pointer; line-height: 1; padding: 2px 6px;
-    }
-    .close-btn:hover { color: var(--text); }
 
-    .modal-body { padding: 22px 24px; }
+    .modal-title {
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .modal-title .word-hl {
+      color: var(--accent);
+      font-style: italic;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 26px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 2px 6px;
+    }
+
+    .close-btn:hover {
+      color: var(--text);
+    }
+
+    .modal-body {
+      padding: 22px 24px;
+    }
 
     .context-box {
       background: var(--surface2);
@@ -313,13 +486,24 @@
       line-height: 1.7;
       margin-bottom: 22px;
     }
-    .context-box .hl { color: var(--accent); font-weight: 700; font-style: normal; }
 
-    .section { margin-bottom: 22px; }
+    .context-box .hl {
+      color: var(--accent);
+      font-weight: 700;
+      font-style: normal;
+    }
+
+    .section {
+      margin-bottom: 22px;
+    }
+
     .section-label {
-      font-size: 11px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 1.5px;
-      color: var(--text-dim); margin-bottom: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-dim);
+      margin-bottom: 10px;
     }
 
     .opt-grid {
@@ -338,33 +522,88 @@
       transition: all 0.18s;
       color: var(--text);
     }
-    .opt-btn:hover { border-color: var(--accent); }
-    .opt-btn .opt-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
-    .opt-btn .opt-desc { font-size: 11px; color: var(--text-dim); line-height: 1.3; }
+
+    .opt-btn:hover {
+      border-color: var(--accent);
+    }
+
+    .opt-btn .opt-name {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .opt-btn .opt-desc {
+      font-size: 11px;
+      color: var(--text-dim);
+      line-height: 1.3;
+    }
 
     /* Selected states */
-    .opt-btn.sel-shot  { border-color: #4a9eff; background: rgba(74,158,255,.13); color: #4a9eff; }
-    .opt-btn.sel-shot .opt-desc  { color: rgba(74,158,255,.65); }
-    .opt-btn.sel-angle { border-color: #c04aff; background: rgba(192,74,255,.13); color: #c04aff; }
-    .opt-btn.sel-angle .opt-desc { color: rgba(192,74,255,.65); }
-    .opt-btn.sel-move  { border-color: #3dd68c; background: rgba(61,214,140,.12); color: #3dd68c; }
-    .opt-btn.sel-move .opt-desc  { color: rgba(61,214,140,.65); }
+    .opt-btn.sel-shot {
+      border-color: #4a9eff;
+      background: rgba(74, 158, 255, .13);
+      color: #4a9eff;
+    }
 
-    .motion-row { display: flex; gap: 8px; }
+    .opt-btn.sel-shot .opt-desc {
+      color: rgba(74, 158, 255, .65);
+    }
+
+    .opt-btn.sel-angle {
+      border-color: #c04aff;
+      background: rgba(192, 74, 255, .13);
+      color: #c04aff;
+    }
+
+    .opt-btn.sel-angle .opt-desc {
+      color: rgba(192, 74, 255, .65);
+    }
+
+    .opt-btn.sel-move {
+      border-color: #3dd68c;
+      background: rgba(61, 214, 140, .12);
+      color: #3dd68c;
+    }
+
+    .opt-btn.sel-move .opt-desc {
+      color: rgba(61, 214, 140, .65);
+    }
+
+    .motion-row {
+      display: flex;
+      gap: 8px;
+    }
+
     .motion-btn {
-      flex: 1; padding: 10px;
+      flex: 1;
+      padding: 10px;
       border: 1px solid var(--border);
       border-radius: 8px;
       background: var(--surface2);
       color: var(--text);
       cursor: pointer;
       text-align: center;
-      font-size: 13px; font-weight: 600;
+      font-size: 13px;
+      font-weight: 600;
       transition: all 0.18s;
     }
-    .motion-btn:hover { border-color: var(--accent); }
-    .motion-btn.sel-static { border-color: #888; background: rgba(136,136,153,.18); color: #ccc; }
-    .motion-btn.sel-moving { border-color: #ff7046; background: rgba(255,112,70,.14); color: #ff7046; }
+
+    .motion-btn:hover {
+      border-color: var(--accent);
+    }
+
+    .motion-btn.sel-static {
+      border-color: #888;
+      background: rgba(136, 136, 153, .18);
+      color: #ccc;
+    }
+
+    .motion-btn.sel-moving {
+      border-color: #ff7046;
+      background: rgba(255, 112, 70, .14);
+      color: #ff7046;
+    }
 
     textarea.notes-field {
       width: 100%;
@@ -378,7 +617,11 @@
       min-height: 80px;
       font-family: inherit;
     }
-    textarea.notes-field:focus { outline: none; border-color: var(--accent); }
+
+    textarea.notes-field:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
 
     .modal-footer {
       padding: 14px 24px;
@@ -386,7 +629,8 @@
       display: flex;
       gap: 10px;
       align-items: center;
-      position: sticky; bottom: 0;
+      position: sticky;
+      bottom: 0;
       background: var(--surface);
     }
 
@@ -398,27 +642,77 @@
       font-weight: 700;
       letter-spacing: 0.5px;
     }
-    .word-token.is-heading:hover { background: rgba(255,255,255,0.06); outline-color: rgba(255,255,255,0.15); }
-    .word-token.elem-CHARACTER { font-weight: 700; }
-    .word-token.elem-PARENTHETICAL { font-style: italic; opacity: 0.72; }
-    .word-token.elem-TRANSITION { font-style: italic; color: var(--text-dim); }
-    .word-token.elem-SUBHEADER { font-weight: 600; color: #bbb; }
+
+    .word-token.is-heading:hover {
+      background: rgba(255, 255, 255, 0.06);
+      outline-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .word-token.elem-CHARACTER {
+      font-weight: 700;
+    }
+
+    .word-token.elem-PARENTHETICAL {
+      font-style: italic;
+      opacity: 0.72;
+    }
+
+    .word-token.elem-TRANSITION {
+      font-style: italic;
+      color: var(--text-dim);
+    }
+
+    .word-token.elem-SUBHEADER {
+      font-weight: 600;
+      color: #bbb;
+    }
 
     /* ── Element type badge in modal ── */
     .elem-badge {
       display: inline-block;
-      font-size: 10px; font-weight: 700;
-      padding: 2px 7px; border-radius: 10px;
-      margin-bottom: 6px; font-style: normal;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 10px;
+      margin-bottom: 6px;
+      font-style: normal;
       font-family: system-ui;
     }
-    .elem-badge.b-ACTION       { background: rgba(100,100,120,.3); color: #aaa; }
-    .elem-badge.b-CHARACTER    { background: rgba(232,160,32,.2);  color: var(--accent); }
-    .elem-badge.b-DIALOGUE     { background: rgba(74,158,255,.15); color: #4a9eff; }
-    .elem-badge.b-PARENTHETICAL{ background: rgba(100,100,120,.2); color: #888; }
-    .elem-badge.b-SCENE_HEADING{ background: rgba(255,255,255,.08);color: #bbb; }
-    .elem-badge.b-SUBHEADER    { background: rgba(255,255,255,.08);color: #bbb; }
-    .elem-badge.b-TRANSITION   { background: rgba(100,100,120,.2); color: #888; }
+
+    .elem-badge.b-ACTION {
+      background: rgba(100, 100, 120, .3);
+      color: #aaa;
+    }
+
+    .elem-badge.b-CHARACTER {
+      background: rgba(232, 160, 32, .2);
+      color: var(--accent);
+    }
+
+    .elem-badge.b-DIALOGUE {
+      background: rgba(74, 158, 255, .15);
+      color: #4a9eff;
+    }
+
+    .elem-badge.b-PARENTHETICAL {
+      background: rgba(100, 100, 120, .2);
+      color: #888;
+    }
+
+    .elem-badge.b-SCENE_HEADING {
+      background: rgba(255, 255, 255, .08);
+      color: #bbb;
+    }
+
+    .elem-badge.b-SUBHEADER {
+      background: rgba(255, 255, 255, .08);
+      color: #bbb;
+    }
+
+    .elem-badge.b-TRANSITION {
+      background: rgba(100, 100, 120, .2);
+      color: #888;
+    }
 
     /* ── Scene dividers in sidebar ── */
     .scene-header {
@@ -428,797 +722,808 @@
       border-radius: 6px;
       border-left: 3px solid var(--accent);
     }
-    .scene-header:first-child { margin-top: 4px; }
-    .scene-header-sub {
-      font-size: 10px; color: var(--accent);
-      text-transform: uppercase; letter-spacing: 1px;
-      font-weight: 700; margin-bottom: 2px;
+
+    .scene-header:first-child {
+      margin-top: 4px;
     }
+
+    .scene-header-sub {
+      font-size: 10px;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
     .scene-header-name {
-      font-size: 12px; color: var(--text);
-      font-weight: 600; font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: var(--text);
+      font-weight: 600;
+      font-family: 'Courier New', monospace;
     }
 
     /* ── Scrollbars ── */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #444; }
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #444;
+    }
   </style>
 </head>
+
 <body>
 
-<!-- ═══════════════════════════ HEADER ═══════════════════════════ -->
-<header>
-  <div class="logo"><span class="accent">SCRIPT</span> TO SHOTS</div>
-  <div class="header-actions">
-    <button class="btn btn-secondary" id="new-script-btn" style="display:none">New Script</button>
-    <button class="btn btn-secondary" id="export-header-btn" style="display:none">Export CSV</button>
-  </div>
-</header>
-
-<!-- ═══════════════════════════ UPLOAD ═══════════════════════════ -->
-<div id="upload-screen">
-  <div class="upload-box" id="drop-zone">
-    <div class="upload-icon">🎬</div>
-    <h2>Upload Your Script</h2>
-    <p>Drop a <strong>.txt</strong> file or paste your script text below</p>
-    <input type="file" id="file-input" style="display:none">
-    <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">
-      Choose File (.txt / .fdx / .fountain)
-    </button>
-    <div class="upload-divider">or paste script below</div>
-    <textarea class="paste-area" id="paste-area" placeholder="INT. COFFEE SHOP - DAY&#10;&#10;SARAH enters, scanning the room..."></textarea>
-    <div class="paste-actions">
-      <button class="btn btn-primary" id="load-paste-btn">Load Script</button>
+  <!-- ═══════════════════════════ HEADER ═══════════════════════════ -->
+  <header>
+    <div class="logo"><span class="accent">SCRIPT</span> TO SHOTS</div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" id="new-script-btn" style="display:none">New Script</button>
+      <button class="btn btn-secondary" id="export-header-btn" style="display:none">Export CSV</button>
     </div>
-  </div>
-</div>
+  </header>
 
-<!-- ═══════════════════════════ MAIN APP ═══════════════════════════ -->
-<div id="app">
-  <div class="stats-bar" id="stats-bar">
-    Total words: <b id="stat-words">0</b>
-    &nbsp;·&nbsp;
-    Scenes: <b id="stat-scenes">0</b>
-    &nbsp;·&nbsp;
-    Shots tagged: <b id="stat-shots">0</b>
-    &nbsp;·&nbsp;
-    Coverage: <b id="stat-pct">0%</b>
-    &nbsp;·&nbsp;
-    <span style="color:var(--text-dim)">Click any word to add a shot</span>
-  </div>
-  <div class="layout">
-    <!-- Script -->
-    <div id="script-panel">
-      <div class="script-content" id="script-content"></div>
-    </div>
-    <!-- Shot List -->
-    <div id="shot-panel">
-      <div class="panel-header">
-        <h3>Shot List</h3>
-        <div class="count-badge" id="shot-count">0</div>
+  <!-- ═══════════════════════════ UPLOAD ═══════════════════════════ -->
+  <div id="upload-screen">
+    <div class="upload-box" id="drop-zone">
+      <div class="upload-icon">🎬</div>
+      <h2>Upload Your Script</h2>
+      <p>Drop a <strong>.txt</strong> file or paste your script text below</p>
+      <input type="file" id="file-input" style="display:none">
+      <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">
+        Choose File (.txt / .fdx / .fountain)
+      </button>
+      <div class="upload-divider">or paste script below</div>
+      <textarea class="paste-area" id="paste-area"
+        placeholder="INT. COFFEE SHOP - DAY&#10;&#10;SARAH enters, scanning the room..."></textarea>
+      <div class="paste-actions">
+        <button class="btn btn-primary" id="load-paste-btn">Load Script</button>
       </div>
-      <div id="shot-list">
-        <div class="empty-state">
-          <div class="icon">🎥</div>
-          <p>Click any word in your script<br>to assign a shot to that moment.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ MAIN APP ═══════════════════════════ -->
+  <div id="app">
+    <div class="stats-bar" id="stats-bar">
+      Total words: <b id="stat-words">0</b>
+      &nbsp;·&nbsp;
+      Scenes: <b id="stat-scenes">0</b>
+      &nbsp;·&nbsp;
+      Shots tagged: <b id="stat-shots">0</b>
+      &nbsp;·&nbsp;
+      Coverage: <b id="stat-pct">0%</b>
+      &nbsp;·&nbsp;
+      <span style="color:var(--text-dim)">Click any word to add a shot</span>
+    </div>
+    <div class="layout">
+      <!-- Script -->
+      <div id="script-panel">
+        <div class="script-content" id="script-content"></div>
+      </div>
+      <!-- Shot List -->
+      <div id="shot-panel">
+        <div class="panel-header">
+          <h3>Shot List</h3>
+          <div class="count-badge" id="shot-count">0</div>
+        </div>
+        <div id="shot-list">
+          <div class="empty-state">
+            <div class="icon">🎥</div>
+            <p>Click any word in your script<br>to assign a shot to that moment.</p>
+          </div>
+        </div>
+        <div class="panel-footer">
+          <button class="btn btn-secondary" id="export-csv-btn">Export CSV</button>
+          <button class="btn btn-secondary" id="print-btn">Print List</button>
         </div>
       </div>
-      <div class="panel-footer">
-        <button class="btn btn-secondary" id="export-csv-btn">Export CSV</button>
-        <button class="btn btn-secondary" id="print-btn">Print List</button>
-      </div>
     </div>
   </div>
-</div>
 
-<!-- ═══════════════════════════ MODAL ═══════════════════════════ -->
-<div class="modal-backdrop" id="modal-backdrop">
-  <div class="modal" id="modal">
-    <div class="modal-header">
-      <div class="modal-title">Shot at: <span class="word-hl" id="modal-word-label"></span></div>
-      <button class="close-btn" id="close-modal-btn">×</button>
-    </div>
-    <div class="modal-body">
-      <!-- Context -->
-      <div class="context-box" id="context-box"></div>
-
-      <!-- Shot Type -->
-      <div class="section">
-        <div class="section-label">Shot Type — Framing</div>
-        <div class="opt-grid" id="shot-type-grid"></div>
+  <!-- ═══════════════════════════ MODAL ═══════════════════════════ -->
+  <div class="modal-backdrop" id="modal-backdrop">
+    <div class="modal" id="modal">
+      <div class="modal-header">
+        <div class="modal-title">Shot at: <span class="word-hl" id="modal-word-label"></span></div>
+        <button class="close-btn" id="close-modal-btn">×</button>
       </div>
+      <div class="modal-body">
+        <!-- Context -->
+        <div class="context-box" id="context-box"></div>
 
-      <!-- Camera Angle -->
-      <div class="section">
-        <div class="section-label">Camera Angle</div>
-        <div class="opt-grid" id="angle-grid"></div>
-      </div>
+        <!-- Shot Type -->
+        <div class="section">
+          <div class="section-label">Shot Type — Framing</div>
+          <div class="opt-grid" id="shot-type-grid"></div>
+        </div>
 
-      <!-- Camera Movement -->
-      <div class="section">
-        <div class="section-label">Camera Movement <span style="color:var(--text-dim);font-weight:400;text-transform:none;font-size:11px">(select all that apply)</span></div>
-        <div class="opt-grid" id="movement-grid"></div>
-      </div>
+        <!-- Camera Angle -->
+        <div class="section">
+          <div class="section-label">Camera Angle</div>
+          <div class="opt-grid" id="angle-grid"></div>
+        </div>
 
-      <!-- Motion -->
-      <div class="section">
-        <div class="section-label">Shot Motion</div>
-        <div class="motion-row">
-          <button class="motion-btn" data-motion="static" id="motion-static">Static</button>
-          <button class="motion-btn" data-motion="moving" id="motion-moving">Moving</button>
+        <!-- Camera Movement -->
+        <div class="section">
+          <div class="section-label">Camera Movement <span
+              style="color:var(--text-dim);font-weight:400;text-transform:none;font-size:11px">(select all that
+              apply)</span></div>
+          <div class="opt-grid" id="movement-grid"></div>
+        </div>
+
+        <!-- Motion -->
+        <div class="section">
+          <div class="section-label">Shot Motion</div>
+          <div class="motion-row">
+            <button class="motion-btn" data-motion="static" id="motion-static">Static</button>
+            <button class="motion-btn" data-motion="moving" id="motion-moving">Moving</button>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="section">
+          <div class="section-label">Director's Notes</div>
+          <textarea class="notes-field" id="shot-notes"
+            placeholder="Describe the shot, mood, lens, lighting cues..."></textarea>
         </div>
       </div>
-
-      <!-- Notes -->
-      <div class="section">
-        <div class="section-label">Director's Notes</div>
-        <textarea class="notes-field" id="shot-notes" placeholder="Describe the shot, mood, lens, lighting cues..."></textarea>
+      <div class="modal-footer">
+        <button class="btn btn-danger" id="remove-shot-btn" style="display:none">Remove Shot</button>
+        <button class="btn btn-secondary" id="cancel-modal-btn">Cancel</button>
+        <button class="btn btn-primary" id="save-shot-btn">Save Shot &nbsp;↵</button>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-danger" id="remove-shot-btn" style="display:none">Remove Shot</button>
-      <button class="btn btn-secondary" id="cancel-modal-btn">Cancel</button>
-      <button class="btn btn-primary" id="save-shot-btn">Save Shot &nbsp;↵</button>
-    </div>
   </div>
-</div>
 
-<script>
-// ─────────────────────────────────────────────────────────────────
-// CINEMA DATA  (from Camera Shots & Movements PDF)
-// ─────────────────────────────────────────────────────────────────
+  <script>
+    // ─────────────────────────────────────────────────────────────────
+    // CINEMA DATA  (from Camera Shots & Movements PDF)
+    // ─────────────────────────────────────────────────────────────────
 
-const SHOT_TYPES = [
-  { id: 'xws',  name: 'Extreme Wide Shot',   desc: 'Opening/establishing, shows location & scale' },
-  { id: 'ls',   name: 'Long Shot',            desc: 'Full body head-to-toe, character in environment' },
-  { id: 'mls',  name: 'Medium Long Shot',     desc: 'Mid-thigh to head, face + environment balance' },
-  { id: 'ms',   name: 'Mid Shot',             desc: 'Waist up — dialogue, expressions, interaction' },
-  { id: 'cu',   name: 'Close Up',             desc: 'Shoulders to head — emotion & detail' },
-  { id: 'xcu',  name: 'Extreme Close Up',     desc: 'Single detail fills frame — intensity & emotion' },
-];
+    const SHOT_TYPES = [
+      { id: 'xws', name: 'Extreme Wide Shot', desc: 'Opening/establishing, shows location & scale' },
+      { id: 'ls', name: 'Long Shot', desc: 'Full body head-to-toe, character in environment' },
+      { id: 'mls', name: 'Medium Long Shot', desc: 'Mid-thigh to head, face + environment balance' },
+      { id: 'ms', name: 'Mid Shot', desc: 'Waist up — dialogue, expressions, interaction' },
+      { id: 'cu', name: 'Close Up', desc: 'Shoulders to head — emotion & detail' },
+      { id: 'xcu', name: 'Extreme Close Up', desc: 'Single detail fills frame — intensity & emotion' },
+    ];
 
-const ANGLES = [
-  { id: 'birds',  name: "Bird's Eye / Top Shot",    desc: 'Directly above — overview of setting' },
-  { id: 'high',   name: 'High Angle',               desc: 'Above eye level — character looks smaller/vulnerable' },
-  { id: 'eye',    name: 'Eye Level',                desc: 'Neutral — audience connects with character' },
-  { id: 'low',    name: 'Low Angle',                desc: 'Below eye level — character appears powerful' },
-  { id: 'worm',   name: "Worm's Eye View",          desc: 'Ground level looking up — dramatic effect' },
-  { id: 'ots',    name: 'Over-the-Shoulder',        desc: 'Behind a character — perspective & conversations' },
-];
+    const ANGLES = [
+      { id: 'birds', name: "Bird's Eye / Top Shot", desc: 'Directly above — overview of setting' },
+      { id: 'high', name: 'High Angle', desc: 'Above eye level — character looks smaller/vulnerable' },
+      { id: 'eye', name: 'Eye Level', desc: 'Neutral — audience connects with character' },
+      { id: 'low', name: 'Low Angle', desc: 'Below eye level — character appears powerful' },
+      { id: 'worm', name: "Worm's Eye View", desc: 'Ground level looking up — dramatic effect' },
+      { id: 'ots', name: 'Over-the-Shoulder', desc: 'Behind a character — perspective & conversations' },
+    ];
 
-const MOVEMENTS = [
-  { id: 'static',    name: 'Static',            desc: 'Camera locked off, no movement' },
-  { id: 'pan',       name: 'Panning',           desc: 'Rotates left/right on horizontal axis' },
-  { id: 'tilt',      name: 'Tilt',              desc: 'Shifts vertically — looking up or down' },
-  { id: 'dolly',     name: 'Tracking / Dolly',  desc: 'Moves along a track — smooth follow' },
-  { id: 'handheld',  name: 'Handheld',          desc: 'Operator-carried — natural, shaky feel' },
-  { id: 'steadicam', name: 'Steadicam',         desc: 'Stabilised operator-mount — smooth movement' },
-  { id: 'crane',     name: 'Crane / Jib',       desc: 'Mounted on crane — sweeping high-angle moves' },
-];
+    const MOVEMENTS = [
+      { id: 'static', name: 'Static', desc: 'Camera locked off, no movement' },
+      { id: 'pan', name: 'Panning', desc: 'Rotates left/right on horizontal axis' },
+      { id: 'tilt', name: 'Tilt', desc: 'Shifts vertically — looking up or down' },
+      { id: 'dolly', name: 'Tracking / Dolly', desc: 'Moves along a track — smooth follow' },
+      { id: 'handheld', name: 'Handheld', desc: 'Operator-carried — natural, shaky feel' },
+      { id: 'steadicam', name: 'Steadicam', desc: 'Stabilised operator-mount — smooth movement' },
+      { id: 'crane', name: 'Crane / Jib', desc: 'Mounted on crane — sweeping high-angle moves' },
+    ];
 
-// PERFORMANCE OPTIMIZATION: Create lookup maps for O(1) access (10-50x faster than array.find)
-const SHOT_TYPES_MAP = new Map(SHOT_TYPES.map(s => [s.id, s]));
-const ANGLES_MAP = new Map(ANGLES.map(s => [s.id, s]));
-const MOVEMENTS_MAP = new Map(MOVEMENTS.map(s => [s.id, s]));
+    // ─────────────────────────────────────────────────────────────────
+    // STATE
+    // ─────────────────────────────────────────────────────────────────
 
-// ─────────────────────────────────────────────────────────────────
-// STATE
-// ─────────────────────────────────────────────────────────────────
+    let tokens = [];      // { id, text, isWord, annotation, scene, isHeading, lineNumber, elementType }
+    let activeId = null;  // word ID currently being edited
+    let draft = {};       // temporary annotation being built in modal
 
-let tokens = [];      // { id, text, isWord, annotation, scene, isHeading, lineNumber, elementType }
-let activeId = null;  // word ID currently being edited
-let draft = {};       // temporary annotation being built in modal
+    const ELEM_LABEL = {
+      SCENE_HEADING: 'Scene Heading',
+      ACTION: 'Action',
+      CHARACTER: 'Character',
+      DIALOGUE: 'Dialogue',
+      PARENTHETICAL: 'Parenthetical',
+      TRANSITION: 'Transition',
+      SUBHEADER: 'Subheader',
+    };
 
-const ELEM_LABEL = {
-  SCENE_HEADING: 'Scene Heading',
-  ACTION:        'Action',
-  CHARACTER:     'Character',
-  DIALOGUE:      'Dialogue',
-  PARENTHETICAL: 'Parenthetical',
-  TRANSITION:    'Transition',
-  SUBHEADER:     'Subheader',
-};
+    // ─────────────────────────────────────────────────────────────────
+    // UPLOAD
+    // ─────────────────────────────────────────────────────────────────
 
-// ─────────────────────────────────────────────────────────────────
-// UPLOAD
-// ─────────────────────────────────────────────────────────────────
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const pasteArea = document.getElementById('paste-area');
 
-const dropZone   = document.getElementById('drop-zone');
-const fileInput  = document.getElementById('file-input');
-const pasteArea  = document.getElementById('paste-area');
-
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-dropZone.addEventListener('drop', e => {
-  e.preventDefault();
-  dropZone.classList.remove('drag-over');
-  const f = e.dataTransfer.files[0];
-  if (f) { const r = new FileReader(); r.onload = ev => loadScript(ev.target.result, f.name); r.readAsText(f); }
-});
-
-fileInput.addEventListener('change', () => {
-  const f = fileInput.files[0];
-  if (f) { const r = new FileReader(); r.onload = ev => loadScript(ev.target.result, f.name); r.readAsText(f); }
-});
-
-document.getElementById('load-paste-btn').addEventListener('click', () => {
-  const t = pasteArea.value.trim();
-  if (t) loadScript(t);
-  else alert('Please paste some script text first.');
-});
-
-function loadScript(text, filename) {
-  try {
-    const ext = (filename || '').split('.').pop().toLowerCase();
-    const trimmed = text.trim();
-    const isFDX = ext === 'fdx' || trimmed.startsWith('<FinalDraft') || (trimmed.startsWith('<?xml') && trimmed.includes('FinalDraft'));
-    const parsedLines = isFDX ? parseFDXToLines(text) : parsePlainTextToLines(text);
-    tokens = buildTokens(parsedLines);
-    document.getElementById('upload-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    document.getElementById('new-script-btn').style.display = 'block';
-    document.getElementById('export-header-btn').style.display = 'block';
-    renderScript();
-    renderShotList();
-    updateStats();
-  } catch (err) {
-    alert('Error loading script: ' + err.message);
-    console.error(err);
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────
-// PARSERS  — produce a normalised line array for buildTokens()
-// Each entry: { text: string, elementType: string }
-// ─────────────────────────────────────────────────────────────────
-
-// ── Final Draft (.fdx) XML parser ──
-function parseFDXToLines(xmlText) {
-  var fdxTypeMap = {
-    "Scene Heading": "SCENE_HEADING",
-    "Action":        "ACTION",
-    "Character":     "CHARACTER",
-    "Dialogue":      "DIALOGUE",
-    "Parenthetical": "PARENTHETICAL",
-    "Transition":    "TRANSITION",
-    "Shot":          "SUBHEADER",
-    "General":       "ACTION"
-  };
-  try {
-    var doc = new DOMParser().parseFromString(xmlText, "text/xml");
-    var paras = doc.querySelectorAll("Paragraph");
-    var lines = [];
-    paras.forEach(function(para) {
-      var rawType = para.getAttribute("Type") || "Action";
-      var elementType = fdxTypeMap[rawType] || "ACTION";
-      var text = "";
-      para.querySelectorAll("Text").forEach(function(t) { text += t.textContent; });
-      if (text.trim()) lines.push({ text: text, elementType: elementType });
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      const f = e.dataTransfer.files[0];
+      if (f) { const r = new FileReader(); r.onload = ev => loadScript(ev.target.result, f.name); r.readAsText(f); }
     });
-    return lines;
-  } catch (e) {
-    return parsePlainTextToLines(xmlText);
-  }
-}
 
-// ── Plain text / Fountain heuristic parser ──
-function parsePlainTextToLines(text) {
-  const rawLines = text.split('\n');
-  const types = detectLineTypes(rawLines);
-  return rawLines.map((line, i) => ({ text: line, elementType: types[i] }));
-}
+    fileInput.addEventListener('change', () => {
+      const f = fileInput.files[0];
+      if (f) { const r = new FileReader(); r.onload = ev => loadScript(ev.target.result, f.name); r.readAsText(f); }
+    });
 
-function detectLineTypes(lines) {
-  const types = [];
-  let afterChar = false; // expect dialogue/parenthetical next
+    document.getElementById('load-paste-btn').addEventListener('click', () => {
+      const t = pasteArea.value.trim();
+      if (t) loadScript(t);
+      else alert('Please paste some script text first.');
+    });
 
-  for (let i = 0; i < lines.length; i++) {
-    const trimmed = lines[i].trim();
-
-    if (!trimmed) {
-      types.push('EMPTY');
-      afterChar = false;
-      continue;
-    }
-
-    // Scene heading
-    if (/^(INT\.|EXT\.|INT\/EXT\.|I\/E\.)/i.test(trimmed)) {
-      types.push('SCENE_HEADING');
-      afterChar = false;
-      continue;
-    }
-
-    // Transition
-    if (/\bTO:$/.test(trimmed) || /^(FADE IN:|FADE OUT\.|SMASH CUT TO:|TITLE CARD:)/i.test(trimmed)) {
-      types.push('TRANSITION');
-      afterChar = false;
-      continue;
-    }
-
-    // Parenthetical after character
-    if (afterChar && trimmed.startsWith('(')) {
-      types.push('PARENTHETICAL');
-      continue; // still expect dialogue after
-    }
-
-    // Dialogue (we're after a character or parenthetical)
-    if (afterChar) {
-      types.push('DIALOGUE');
-      continue; // multi-line dialogue stays in this mode
-    }
-
-    // Is the line effectively ALL CAPS?
-    // Strip character extensions like (V.O.) (O.S.) before testing
-    const stripped = trimmed.replace(/\s*\([^)]*\)\s*/g, '').trim();
-    const letters  = stripped.replace(/[^a-zA-Z]/g, '');
-    const isAllCaps = letters.length > 0 && stripped === stripped.toUpperCase();
-
-    if (isAllCaps) {
-      // Look ahead: if next non-empty line is not all-caps → character name
-      let hasDialogueNext = false;
-      for (let j = i + 1; j < lines.length; j++) {
-        const nextT = lines[j].trim();
-        if (!nextT) break; // blank line separating → subheader
-        const nextStripped = nextT.replace(/\s*\([^)]*\)\s*/g, '').trim();
-        const nextLetters  = nextStripped.replace(/[^a-zA-Z]/g, '');
-        const nextAllCaps  = nextLetters.length > 0 && nextStripped === nextStripped.toUpperCase();
-        // parenthetical or mixed-case line → it's dialogue following
-        if (!nextAllCaps || nextT.startsWith('(')) hasDialogueNext = true;
-        break;
+    function loadScript(text, filename) {
+      try {
+        const ext = (filename || '').split('.').pop().toLowerCase();
+        const trimmed = text.trim();
+        const isFDX = ext === 'fdx' || trimmed.startsWith('<FinalDraft') || (trimmed.startsWith('<?xml') && trimmed.includes('FinalDraft'));
+        const parsedLines = isFDX ? parseFDXToLines(text) : parsePlainTextToLines(text);
+        tokens = buildTokens(parsedLines);
+        document.getElementById('upload-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        document.getElementById('new-script-btn').style.display = 'block';
+        document.getElementById('export-header-btn').style.display = 'block';
+        renderScript();
+        renderShotList();
+        updateStats();
+      } catch (err) {
+        alert('Error loading script: ' + err.message);
+        console.error(err);
       }
-      if (hasDialogueNext) {
-        types.push('CHARACTER');
-        afterChar = true;
-      } else {
-        types.push('SUBHEADER');
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // PARSERS  — produce a normalised line array for buildTokens()
+    // Each entry: { text: string, elementType: string }
+    // ─────────────────────────────────────────────────────────────────
+
+    // ── Final Draft (.fdx) XML parser ──
+    function parseFDXToLines(xmlText) {
+      var fdxTypeMap = {
+        "Scene Heading": "SCENE_HEADING",
+        "Action": "ACTION",
+        "Character": "CHARACTER",
+        "Dialogue": "DIALOGUE",
+        "Parenthetical": "PARENTHETICAL",
+        "Transition": "TRANSITION",
+        "Shot": "SUBHEADER",
+        "General": "ACTION"
+      };
+      try {
+        var doc = new DOMParser().parseFromString(xmlText, "text/xml");
+        var paras = doc.querySelectorAll("Paragraph");
+        var lines = [];
+        paras.forEach(function (para) {
+          var rawType = para.getAttribute("Type") || "Action";
+          var elementType = fdxTypeMap[rawType] || "ACTION";
+          var text = "";
+          para.querySelectorAll("Text").forEach(function (t) { text += t.textContent; });
+          if (text.trim()) lines.push({ text: text, elementType: elementType });
+        });
+        return lines;
+      } catch (e) {
+        return parsePlainTextToLines(xmlText);
+      }
+    }
+
+    // ── Plain text / Fountain heuristic parser ──
+    function parsePlainTextToLines(text) {
+      const rawLines = text.split('\n');
+      const types = detectLineTypes(rawLines);
+      return rawLines.map((line, i) => ({ text: line, elementType: types[i] }));
+    }
+
+    function detectLineTypes(lines) {
+      const types = [];
+      let afterChar = false; // expect dialogue/parenthetical next
+
+      for (let i = 0; i < lines.length; i++) {
+        const trimmed = lines[i].trim();
+
+        if (!trimmed) {
+          types.push('EMPTY');
+          afterChar = false;
+          continue;
+        }
+
+        // Scene heading
+        if (/^(INT\.|EXT\.|INT\/EXT\.|I\/E\.)/i.test(trimmed)) {
+          types.push('SCENE_HEADING');
+          afterChar = false;
+          continue;
+        }
+
+        // Transition
+        if (/\bTO:$/.test(trimmed) || /^(FADE IN:|FADE OUT\.|SMASH CUT TO:|TITLE CARD:)/i.test(trimmed)) {
+          types.push('TRANSITION');
+          afterChar = false;
+          continue;
+        }
+
+        // Parenthetical after character
+        if (afterChar && trimmed.startsWith('(')) {
+          types.push('PARENTHETICAL');
+          continue; // still expect dialogue after
+        }
+
+        // Dialogue (we're after a character or parenthetical)
+        if (afterChar) {
+          types.push('DIALOGUE');
+          continue; // multi-line dialogue stays in this mode
+        }
+
+        // Is the line effectively ALL CAPS?
+        // Strip character extensions like (V.O.) (O.S.) before testing
+        const stripped = trimmed.replace(/\s*\([^)]*\)\s*/g, '').trim();
+        const letters = stripped.replace(/[^a-zA-Z]/g, '');
+        const isAllCaps = letters.length > 0 && stripped === stripped.toUpperCase();
+
+        if (isAllCaps) {
+          // Look ahead: if next non-empty line is not all-caps → character name
+          let hasDialogueNext = false;
+          for (let j = i + 1; j < lines.length; j++) {
+            const nextT = lines[j].trim();
+            if (!nextT) break; // blank line separating → subheader
+            const nextStripped = nextT.replace(/\s*\([^)]*\)\s*/g, '').trim();
+            const nextLetters = nextStripped.replace(/[^a-zA-Z]/g, '');
+            const nextAllCaps = nextLetters.length > 0 && nextStripped === nextStripped.toUpperCase();
+            // parenthetical or mixed-case line → it's dialogue following
+            if (!nextAllCaps || nextT.startsWith('(')) hasDialogueNext = true;
+            break;
+          }
+          if (hasDialogueNext) {
+            types.push('CHARACTER');
+            afterChar = true;
+          } else {
+            types.push('SUBHEADER');
+            afterChar = false;
+          }
+          continue;
+        }
+
+        types.push('ACTION');
         afterChar = false;
       }
-      continue;
+
+      return types;
     }
 
-    types.push('ACTION');
-    afterChar = false;
-  }
+    // ─────────────────────────────────────────────────────────────────
+    // TOKEN BUILDER  — turns parsed lines → token array
+    // ─────────────────────────────────────────────────────────────────
 
-  return types;
-}
+    function buildTokens(parsedLines) {
+      const result = [];
+      let id = 0;
+      let currentScene = null;
+      let sceneNumber = 0;
 
-// ─────────────────────────────────────────────────────────────────
-// TOKEN BUILDER  — turns parsed lines → token array
-// ─────────────────────────────────────────────────────────────────
+      // apostrophe U+0027, left-quote U+2018, right-quote U+2019, hyphen U+002D
+      const APOS = "[\\u0027\\u2018\\u2019\\u002D]";
+      const WORD_RE = new RegExp("([^\\S\\n]+|[a-zA-Z0-9]+(?:" + APOS + "[a-zA-Z0-9]+)*|[^\\w\\s]+)", "g");
 
-function buildTokens(parsedLines) {
-  const result = [];
-  let id = 0;
-  let currentScene = null;
-  let sceneNumber = 0;
+      parsedLines.forEach(function (line, lineIdx) {
+        var text = line.text;
+        var elementType = line.elementType || 'ACTION';
+        var lineNumber = lineIdx + 1;
+        var isHeadingLine = elementType === 'SCENE_HEADING';
 
-  // apostrophe U+0027, left-quote U+2018, right-quote U+2019, hyphen U+002D
-  const APOS = "[\\u0027\\u2018\\u2019\\u002D]";
-  const WORD_RE = new RegExp("([^\\S\\n]+|[a-zA-Z0-9]+(?:" + APOS + "[a-zA-Z0-9]+)*|[^\\w\\s]+)", "g");
+        if (isHeadingLine && text.trim()) {
+          sceneNumber++;
+          currentScene = { name: text.trim(), number: sceneNumber };
+        }
 
-  parsedLines.forEach(function(line, lineIdx) {
-    var text = line.text;
-    var elementType = line.elementType || 'ACTION';
-    var lineNumber = lineIdx + 1;
-    var isHeadingLine = elementType === 'SCENE_HEADING';
+        WORD_RE.lastIndex = 0;
+        var m;
+        while ((m = WORD_RE.exec(text)) !== null) {
+          var tok = m[0];
+          var isWord = /^[a-zA-Z0-9]/.test(tok);
+          result.push({
+            id: id++, text: tok, isWord: isWord, annotation: null,
+            scene: currentScene, isHeading: isHeadingLine,
+            lineNumber: lineNumber, elementType: elementType
+          });
+        }
 
-    if (isHeadingLine && text.trim()) {
-      sceneNumber++;
-      currentScene = { name: text.trim(), number: sceneNumber };
+        if (lineIdx < parsedLines.length - 1) {
+          result.push({
+            id: id++, text: '\n', isWord: false, annotation: null,
+            scene: currentScene, isHeading: false, lineNumber: lineNumber, elementType: elementType
+          });
+        }
+      });
+
+      return result;
     }
 
-    WORD_RE.lastIndex = 0;
-    var m;
-    while ((m = WORD_RE.exec(text)) !== null) {
-      var tok = m[0];
-      var isWord = /^[a-zA-Z0-9]/.test(tok);
-      result.push({
-        id: id++, text: tok, isWord: isWord, annotation: null,
-        scene: currentScene, isHeading: isHeadingLine,
-        lineNumber: lineNumber, elementType: elementType
+    // ─────────────────────────────────────────────────────────────────
+    // SCENE GROUPING HELPER
+    // ─────────────────────────────────────────────────────────────────
+
+    function groupShotsByScene() {
+      const shots = tokens.filter(t => t.isWord && t.annotation);
+      const groups = [];
+      let curGroup = null;
+
+      shots.forEach(tok => {
+        const key = tok.scene ? tok.scene.number : 0;
+        if (!curGroup || curGroup.key !== key) {
+          curGroup = { key, name: tok.scene ? tok.scene.name : 'No Scene', shots: [] };
+          groups.push(curGroup);
+        }
+        curGroup.shots.push(tok);
+      });
+
+      return groups;
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // RENDER SCRIPT
+    // ─────────────────────────────────────────────────────────────────
+
+    function renderScript() {
+      const container = document.getElementById('script-content');
+      container.innerHTML = '';
+      const annotated = tokens.filter(t => t.isWord && t.annotation);
+
+      tokens.forEach(tok => {
+        if (tok.isWord) {
+          const shotNum = annotated.findIndex(t => t.id === tok.id);
+          const span = document.createElement('span');
+          span.className = 'word-token'
+            + (tok.annotation ? ' annotated' : '')
+            + (tok.isHeading ? ' is-heading' : '')
+            + (tok.elementType && !tok.isHeading ? ' elem-' + tok.elementType : '');
+          span.dataset.id = tok.id;
+          span.textContent = tok.text;
+          if (tok.annotation) {
+            const badge = document.createElement('sup');
+            badge.className = 'shot-badge';
+            badge.textContent = shotNum + 1;
+            span.appendChild(badge);
+          }
+          span.addEventListener('click', () => openModal(tok.id));
+          container.appendChild(span);
+        } else {
+          if (tok.text.includes('\n')) {
+            const n = (tok.text.match(/\n/g) || []).length;
+            for (let i = 0; i < n; i++) container.appendChild(document.createElement('br'));
+          } else {
+            container.appendChild(document.createTextNode(tok.text));
+          }
+        }
       });
     }
 
-    if (lineIdx < parsedLines.length - 1) {
-      result.push({ id: id++, text: '\n', isWord: false, annotation: null,
-        scene: currentScene, isHeading: false, lineNumber: lineNumber, elementType: elementType });
+    // ─────────────────────────────────────────────────────────────────
+    // MODAL
+    // ─────────────────────────────────────────────────────────────────
+
+    function buildGrids() {
+      // Shot Type — single select
+      const sg = document.getElementById('shot-type-grid');
+      sg.innerHTML = '';
+      SHOT_TYPES.forEach(s => {
+        const btn = makeOptBtn(s, 'sel-shot');
+        btn.addEventListener('click', () => {
+          const wasSelected = btn.classList.contains('sel-shot');
+          sg.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('sel-shot'));
+          if (!wasSelected) { btn.classList.add('sel-shot'); draft.shotType = s.id; }
+          else draft.shotType = null;
+        });
+        sg.appendChild(btn);
+      });
+
+      // Angle — single select
+      const ag = document.getElementById('angle-grid');
+      ag.innerHTML = '';
+      ANGLES.forEach(a => {
+        const btn = makeOptBtn(a, 'sel-angle');
+        btn.addEventListener('click', () => {
+          const wasSelected = btn.classList.contains('sel-angle');
+          ag.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('sel-angle'));
+          if (!wasSelected) { btn.classList.add('sel-angle'); draft.angle = a.id; }
+          else draft.angle = null;
+        });
+        ag.appendChild(btn);
+      });
+
+      // Movement — multi select
+      const mg = document.getElementById('movement-grid');
+      mg.innerHTML = '';
+      MOVEMENTS.forEach(mv => {
+        const btn = makeOptBtn(mv, 'sel-move');
+        btn.addEventListener('click', () => {
+          btn.classList.toggle('sel-move');
+          const sel = btn.classList.contains('sel-move');
+          if (sel) draft.movements = [...(draft.movements || []), mv.id];
+          else draft.movements = (draft.movements || []).filter(x => x !== mv.id);
+        });
+        mg.appendChild(btn);
+      });
+
+      // Motion
+      document.getElementById('motion-static').addEventListener('click', () => toggleMotion('static'));
+      document.getElementById('motion-moving').addEventListener('click', () => toggleMotion('moving'));
     }
-  });
 
-  return result;
-}
-
-// ─────────────────────────────────────────────────────────────────
-// SCENE GROUPING HELPER
-// ─────────────────────────────────────────────────────────────────
-
-function groupShotsByScene() {
-  const shots = tokens.filter(t => t.isWord && t.annotation);
-  const groups = [];
-  let curGroup = null;
-
-  shots.forEach(tok => {
-    const key = tok.scene ? tok.scene.number : 0;
-    if (!curGroup || curGroup.key !== key) {
-      curGroup = { key, name: tok.scene ? tok.scene.name : 'No Scene', shots: [] };
-      groups.push(curGroup);
+    function toggleMotion(val) {
+      const btn = document.getElementById('motion-' + val);
+      const wasSelected = btn.classList.contains('sel-' + val);
+      ['static', 'moving'].forEach(v => {
+        document.getElementById('motion-' + v).classList.remove('sel-static', 'sel-moving');
+      });
+      if (!wasSelected) { btn.classList.add('sel-' + val); draft.motion = val; }
+      else draft.motion = null;
     }
-    curGroup.shots.push(tok);
-  });
 
-  return groups;
-}
-
-// ─────────────────────────────────────────────────────────────────
-// RENDER SCRIPT
-// ─────────────────────────────────────────────────────────────────
-
-function renderScript() {
-  const container = document.getElementById('script-content');
-  const annotated = tokens.filter(t => t.isWord && t.annotation);
-
-  // PERFORMANCE: Use DocumentFragment to batch all DOM operations (10-100x faster)
-  const fragment = document.createDocumentFragment();
-
-  tokens.forEach(tok => {
-    if (tok.isWord) {
-      const shotNum = annotated.findIndex(t => t.id === tok.id);
-      const span = document.createElement('span');
-      span.className = 'word-token'
-        + (tok.annotation ? ' annotated' : '')
-        + (tok.isHeading ? ' is-heading' : '')
-        + (tok.elementType && !tok.isHeading ? ' elem-' + tok.elementType : '');
-      span.dataset.id = tok.id;
-      span.textContent = tok.text;
-      if (tok.annotation) {
-        const badge = document.createElement('sup');
-        badge.className = 'shot-badge';
-        badge.textContent = shotNum + 1;
-        span.appendChild(badge);
-      }
-      span.addEventListener('click', () => openModal(tok.id));
-      fragment.appendChild(span);
-    } else {
-      if (tok.text.includes('\n')) {
-        const n = (tok.text.match(/\n/g) || []).length;
-        for (let i = 0; i < n; i++) fragment.appendChild(document.createElement('br'));
-      } else {
-        fragment.appendChild(document.createTextNode(tok.text));
-      }
+    function makeOptBtn(item, selClass) {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.dataset.id = item.id;
+      btn.innerHTML = `<div class="opt-name">${item.name}</div><div class="opt-desc">${item.desc}</div>`;
+      return btn;
     }
-  });
 
-  // Single DOM update instead of thousands
-  container.innerHTML = '';
-  container.appendChild(fragment);
-}
+    function openModal(wordId) {
+      activeId = wordId;
+      const tok = tokens.find(t => t.id === wordId);
+      draft = tok.annotation ? JSON.parse(JSON.stringify(tok.annotation)) : { shotType: null, angle: null, movements: [], motion: null, notes: '' };
 
-// ─────────────────────────────────────────────────────────────────
-// MODAL
-// ─────────────────────────────────────────────────────────────────
+      // Label
+      document.getElementById('modal-word-label').textContent = `"${tok.text}"`;
 
-function buildGrids() {
-  // Shot Type — single select
-  const sg = document.getElementById('shot-type-grid');
-  sg.innerHTML = '';
-  SHOT_TYPES.forEach(s => {
-    const btn = makeOptBtn(s, 'sel-shot');
-    btn.addEventListener('click', () => {
-      const wasSelected = btn.classList.contains('sel-shot');
-      sg.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('sel-shot'));
-      if (!wasSelected) { btn.classList.add('sel-shot'); draft.shotType = s.id; }
-      else draft.shotType = null;
-    });
-    sg.appendChild(btn);
-  });
-
-  // Angle — single select
-  const ag = document.getElementById('angle-grid');
-  ag.innerHTML = '';
-  ANGLES.forEach(a => {
-    const btn = makeOptBtn(a, 'sel-angle');
-    btn.addEventListener('click', () => {
-      const wasSelected = btn.classList.contains('sel-angle');
-      ag.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('sel-angle'));
-      if (!wasSelected) { btn.classList.add('sel-angle'); draft.angle = a.id; }
-      else draft.angle = null;
-    });
-    ag.appendChild(btn);
-  });
-
-  // Movement — multi select
-  const mg = document.getElementById('movement-grid');
-  mg.innerHTML = '';
-  MOVEMENTS.forEach(mv => {
-    const btn = makeOptBtn(mv, 'sel-move');
-    btn.addEventListener('click', () => {
-      btn.classList.toggle('sel-move');
-      const sel = btn.classList.contains('sel-move');
-      if (sel) draft.movements = [...(draft.movements || []), mv.id];
-      else draft.movements = (draft.movements || []).filter(x => x !== mv.id);
-    });
-    mg.appendChild(btn);
-  });
-
-  // Motion
-  document.getElementById('motion-static').addEventListener('click', () => toggleMotion('static'));
-  document.getElementById('motion-moving').addEventListener('click', () => toggleMotion('moving'));
-}
-
-function toggleMotion(val) {
-  const btn = document.getElementById('motion-' + val);
-  const wasSelected = btn.classList.contains('sel-' + val);
-  ['static','moving'].forEach(v => {
-    document.getElementById('motion-' + v).classList.remove('sel-static','sel-moving');
-  });
-  if (!wasSelected) { btn.classList.add('sel-' + val); draft.motion = val; }
-  else draft.motion = null;
-}
-
-function makeOptBtn(item, selClass) {
-  const btn = document.createElement('button');
-  btn.className = 'opt-btn';
-  btn.dataset.id = item.id;
-  btn.innerHTML = `<div class="opt-name">${item.name}</div><div class="opt-desc">${item.desc}</div>`;
-  return btn;
-}
-
-function openModal(wordId) {
-  activeId = wordId;
-  const tok = tokens.find(t => t.id === wordId);
-  draft = tok.annotation ? JSON.parse(JSON.stringify(tok.annotation)) : { shotType: null, angle: null, movements: [], motion: null, notes: '' };
-
-  // Label
-  document.getElementById('modal-word-label').textContent = `"${tok.text}"`;
-
-  // Context (±6 word-tokens)
-  const words = tokens.filter(t => t.isWord);
-  const wi = words.findIndex(t => t.id === wordId);
-  const slice = words.slice(Math.max(0, wi - 6), Math.min(words.length, wi + 7));
-  const ctxHtml = slice.map(t =>
-    t.id === wordId ? `<span class="hl">${t.text}</span>` : t.text
-  ).join(' ');
-  const elemLabel = ELEM_LABEL[tok.elementType] || tok.elementType || 'Action';
-  const elemClass = 'elem-badge b-' + (tok.elementType || 'ACTION');
-  const sceneStr  = tok.scene ? tok.scene.name : 'No scene';
-  const metaRow   = `<span style="display:block;margin-bottom:8px;font-style:normal">
+      // Context (±6 word-tokens)
+      const words = tokens.filter(t => t.isWord);
+      const wi = words.findIndex(t => t.id === wordId);
+      const slice = words.slice(Math.max(0, wi - 6), Math.min(words.length, wi + 7));
+      const ctxHtml = slice.map(t =>
+        t.id === wordId ? `<span class="hl">${t.text}</span>` : t.text
+      ).join(' ');
+      const elemLabel = ELEM_LABEL[tok.elementType] || tok.elementType || 'Action';
+      const elemClass = 'elem-badge b-' + (tok.elementType || 'ACTION');
+      const sceneStr = tok.scene ? tok.scene.name : 'No scene';
+      const metaRow = `<span style="display:block;margin-bottom:8px;font-style:normal">
     <span class="${elemClass}">${elemLabel}</span>
     <span style="font-size:10px;color:var(--text-dim);margin-left:8px">Line ${tok.lineNumber}</span>
     <span style="font-size:10px;color:var(--accent);margin-left:10px;font-family:'Courier New',monospace;font-weight:700">${sceneStr}</span>
   </span>`;
-  document.getElementById('context-box').innerHTML = metaRow + (wi > 6 ? '…' : '') + ctxHtml + (wi < words.length - 7 ? '…' : '');
+      document.getElementById('context-box').innerHTML = metaRow + (wi > 6 ? '…' : '') + ctxHtml + (wi < words.length - 7 ? '…' : '');
 
-  // Build & restore grids
-  buildGrids();
+      // Build & restore grids
+      buildGrids();
 
-  if (draft.shotType) {
-    const b = document.querySelector(`#shot-type-grid [data-id="${draft.shotType}"]`);
-    if (b) b.classList.add('sel-shot');
-  }
-  if (draft.angle) {
-    const b = document.querySelector(`#angle-grid [data-id="${draft.angle}"]`);
-    if (b) b.classList.add('sel-angle');
-  }
-  (draft.movements || []).forEach(mv => {
-    const b = document.querySelector(`#movement-grid [data-id="${mv}"]`);
-    if (b) b.classList.add('sel-move');
-  });
-  if (draft.motion) {
-    const b = document.getElementById('motion-' + draft.motion);
-    if (b) b.classList.add('sel-' + draft.motion);
-  }
+      if (draft.shotType) {
+        const b = document.querySelector(`#shot-type-grid [data-id="${draft.shotType}"]`);
+        if (b) b.classList.add('sel-shot');
+      }
+      if (draft.angle) {
+        const b = document.querySelector(`#angle-grid [data-id="${draft.angle}"]`);
+        if (b) b.classList.add('sel-angle');
+      }
+      (draft.movements || []).forEach(mv => {
+        const b = document.querySelector(`#movement-grid [data-id="${mv}"]`);
+        if (b) b.classList.add('sel-move');
+      });
+      if (draft.motion) {
+        const b = document.getElementById('motion-' + draft.motion);
+        if (b) b.classList.add('sel-' + draft.motion);
+      }
 
-  document.getElementById('shot-notes').value = draft.notes || '';
-  document.getElementById('remove-shot-btn').style.display = tok.annotation ? 'inline-flex' : 'none';
-  document.getElementById('modal-backdrop').classList.add('open');
-}
+      document.getElementById('shot-notes').value = draft.notes || '';
+      document.getElementById('remove-shot-btn').style.display = tok.annotation ? 'inline-flex' : 'none';
+      document.getElementById('modal-backdrop').classList.add('open');
+    }
 
-function closeModal() {
-  document.getElementById('modal-backdrop').classList.remove('open');
-  activeId = null; draft = {};
-}
+    function closeModal() {
+      document.getElementById('modal-backdrop').classList.remove('open');
+      activeId = null; draft = {};
+    }
 
-function saveShot() {
-  if (activeId === null) return;
-  draft.notes = document.getElementById('shot-notes').value.trim();
-  const hasAny = draft.shotType || draft.angle || (draft.movements && draft.movements.length) || draft.motion || draft.notes;
-  const tok = tokens.find(t => t.id === activeId);
-  tok.annotation = hasAny ? { ...draft } : null;
-  closeModal();
-  renderScript();
-  renderShotList();
-  updateStats();
-}
+    function saveShot() {
+      if (activeId === null) return;
+      draft.notes = document.getElementById('shot-notes').value.trim();
+      const hasAny = draft.shotType || draft.angle || (draft.movements && draft.movements.length) || draft.motion || draft.notes;
+      const tok = tokens.find(t => t.id === activeId);
+      tok.annotation = hasAny ? { ...draft } : null;
+      closeModal();
+      renderScript();
+      renderShotList();
+      updateStats();
+    }
 
-function removeShot() {
-  if (activeId === null) return;
-  tokens.find(t => t.id === activeId).annotation = null;
-  closeModal();
-  renderScript();
-  renderShotList();
-  updateStats();
-}
+    function removeShot() {
+      if (activeId === null) return;
+      tokens.find(t => t.id === activeId).annotation = null;
+      closeModal();
+      renderScript();
+      renderShotList();
+      updateStats();
+    }
 
-document.getElementById('save-shot-btn').addEventListener('click', saveShot);
-document.getElementById('cancel-modal-btn').addEventListener('click', closeModal);
-document.getElementById('close-modal-btn').addEventListener('click', closeModal);
-document.getElementById('remove-shot-btn').addEventListener('click', removeShot);
-document.getElementById('modal-backdrop').addEventListener('click', e => {
-  if (e.target === document.getElementById('modal-backdrop')) closeModal();
-});
+    document.getElementById('save-shot-btn').addEventListener('click', saveShot);
+    document.getElementById('cancel-modal-btn').addEventListener('click', closeModal);
+    document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+    document.getElementById('remove-shot-btn').addEventListener('click', removeShot);
+    document.getElementById('modal-backdrop').addEventListener('click', e => {
+      if (e.target === document.getElementById('modal-backdrop')) closeModal();
+    });
 
-// ─────────────────────────────────────────────────────────────────
-// SHOT LIST SIDEBAR
-// ─────────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────
+    // SHOT LIST SIDEBAR
+    // ─────────────────────────────────────────────────────────────────
 
-function renderShotList() {
-  const list = document.getElementById('shot-list');
-  const allShots = tokens.filter(t => t.isWord && t.annotation);
-  document.getElementById('shot-count').textContent = allShots.length;
+    function renderShotList() {
+      const list = document.getElementById('shot-list');
+      const allShots = tokens.filter(t => t.isWord && t.annotation);
+      document.getElementById('shot-count').textContent = allShots.length;
 
-  if (!allShots.length) {
-    list.innerHTML = `<div class="empty-state"><div class="icon">🎥</div><p>Click any word in your script<br>to assign a shot to that moment.</p></div>`;
-    return;
-  }
+      if (!allShots.length) {
+        list.innerHTML = `<div class="empty-state"><div class="icon">🎥</div><p>Click any word in your script<br>to assign a shot to that moment.</p></div>`;
+        return;
+      }
 
-  // PERFORMANCE: Use DocumentFragment for batch DOM updates
-  const fragment = document.createDocumentFragment();
-  const groups = groupShotsByScene();
-  let globalShotNum = 1;
+      list.innerHTML = '';
+      const groups = groupShotsByScene();
+      let globalShotNum = 1;
 
-  groups.forEach(group => {
-    // Scene header
-    const header = document.createElement('div');
-    header.className = 'scene-header';
-    header.innerHTML = `
+      groups.forEach(group => {
+        // Scene header
+        const header = document.createElement('div');
+        header.className = 'scene-header';
+        header.innerHTML = `
       <div class="scene-header-sub">${group.key > 0 ? 'Scene ' + group.key : 'Preamble'} · ${group.shots.length} shot${group.shots.length !== 1 ? 's' : ''}</div>
       <div class="scene-header-name">${group.name}</div>
     `;
-    fragment.appendChild(header);
+        list.appendChild(header);
 
-    // Shot cards within this scene
-    group.shots.forEach(tok => {
-      const a = tok.annotation;
-      const card = document.createElement('div');
-      card.className = 'shot-card';
+        // Shot cards within this scene
+        group.shots.forEach(tok => {
+          const a = tok.annotation;
+          const card = document.createElement('div');
+          card.className = 'shot-card';
 
-      // PERFORMANCE: Use Map.get() instead of array.find() - O(1) vs O(n)
-      const shotName  = a.shotType  ? (SHOT_TYPES_MAP.get(a.shotType)?.name  || '') : '';
-      const angleName = a.angle     ? (ANGLES_MAP.get(a.angle)?.name          || '') : '';
-      const moveNames = (a.movements || []).map(mv => MOVEMENTS_MAP.get(mv)?.name).filter(Boolean);
+          const shotName = a.shotType ? (SHOT_TYPES.find(s => s.id === a.shotType)?.name || '') : '';
+          const angleName = a.angle ? (ANGLES.find(s => s.id === a.angle)?.name || '') : '';
+          const moveNames = (a.movements || []).map(mv => MOVEMENTS.find(s => s.id === mv)?.name).filter(Boolean);
 
-      let tags = '';
-      if (shotName)  tags += `<span class="tag t-shot">${shotName}</span>`;
-      if (angleName) tags += `<span class="tag t-angle">${angleName}</span>`;
-      moveNames.forEach(mn => tags += `<span class="tag t-move">${mn}</span>`);
-      if (a.motion === 'static') tags += `<span class="tag t-static">Static</span>`;
-      if (a.motion === 'moving') tags += `<span class="tag t-moving">Moving</span>`;
-      if (!tags) tags = `<span class="tag">No details — click to edit</span>`;
+          let tags = '';
+          if (shotName) tags += `<span class="tag t-shot">${shotName}</span>`;
+          if (angleName) tags += `<span class="tag t-angle">${angleName}</span>`;
+          moveNames.forEach(mn => tags += `<span class="tag t-move">${mn}</span>`);
+          if (a.motion === 'static') tags += `<span class="tag t-static">Static</span>`;
+          if (a.motion === 'moving') tags += `<span class="tag t-moving">Moving</span>`;
+          if (!tags) tags = `<span class="tag">No details — click to edit</span>`;
 
-      const elemL = ELEM_LABEL[tok.elementType] || 'Action';
-      card.innerHTML = `
+          const elemL = ELEM_LABEL[tok.elementType] || 'Action';
+          card.innerHTML = `
         <div class="shot-num">SHOT ${globalShotNum} &nbsp;·&nbsp; <span style="font-weight:400;color:var(--text-dim)">Line ${tok.lineNumber} · ${elemL}</span></div>
         <div class="shot-word">"${tok.text}"</div>
         <div class="shot-tags">${tags}</div>
         ${a.notes ? `<div class="shot-notes-preview">${a.notes}</div>` : ''}
       `;
-      card.addEventListener('click', () => openModal(tok.id));
-      fragment.appendChild(card);
-      globalShotNum++;
-    });
-  });
+          card.addEventListener('click', () => openModal(tok.id));
+          list.appendChild(card);
+          globalShotNum++;
+        });
+      });
+    }
 
-  // Single DOM update instead of many
-  list.innerHTML = '';
-  list.appendChild(fragment);
-}
+    // ─────────────────────────────────────────────────────────────────
+    // STATS
+    // ─────────────────────────────────────────────────────────────────
 
-// ─────────────────────────────────────────────────────────────────
-// STATS
-// ─────────────────────────────────────────────────────────────────
+    function updateStats() {
+      const total = tokens.filter(t => t.isWord).length;
+      const tagged = tokens.filter(t => t.isWord && t.annotation).length;
+      const sceneCount = new Set(tokens.filter(t => t.scene).map(t => t.scene.number)).size;
+      document.getElementById('stat-words').textContent = total.toLocaleString();
+      document.getElementById('stat-scenes').textContent = sceneCount;
+      document.getElementById('stat-shots').textContent = tagged.toLocaleString();
+      document.getElementById('stat-pct').textContent = total ? Math.round(tagged / total * 100) + '%' : '0%';
+    }
 
-function updateStats() {
-  const total = tokens.filter(t => t.isWord).length;
-  const tagged = tokens.filter(t => t.isWord && t.annotation).length;
-  const sceneCount = new Set(tokens.filter(t => t.scene).map(t => t.scene.number)).size;
-  document.getElementById('stat-words').textContent = total.toLocaleString();
-  document.getElementById('stat-scenes').textContent = sceneCount;
-  document.getElementById('stat-shots').textContent = tagged.toLocaleString();
-  document.getElementById('stat-pct').textContent = total ? Math.round(tagged / total * 100) + '%' : '0%';
-}
+    // ─────────────────────────────────────────────────────────────────
+    // NEW SCRIPT
+    // ─────────────────────────────────────────────────────────────────
 
-// ─────────────────────────────────────────────────────────────────
-// NEW SCRIPT
-// ─────────────────────────────────────────────────────────────────
-
-document.getElementById('new-script-btn').addEventListener('click', () => {
-  if (!confirm('Start a new script? All current annotations will be lost.')) return;
-  tokens = [];
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('upload-screen').style.display = 'flex';
-  document.getElementById('new-script-btn').style.display = 'none';
-  document.getElementById('export-header-btn').style.display = 'none';
-  pasteArea.value = '';
-  fileInput.value = '';
-});
-
-// ─────────────────────────────────────────────────────────────────
-// EXPORT — CSV
-// ─────────────────────────────────────────────────────────────────
-
-function exportCSV() {
-  const allShots = tokens.filter(t => t.isWord && t.annotation);
-  if (!allShots.length) { alert('No shots to export yet.'); return; }
-
-  const COL_HDR = ['Shot #', 'Scene', 'Line #', 'Element Type', 'Trigger Word', 'Shot Type', 'Camera Angle', 'Camera Movement(s)', 'Motion', 'Notes'];
-  const rows = [];
-  const groups = groupShotsByScene();
-  let globalNum = 1;
-
-  groups.forEach(group => {
-    const sceneLabel = group.key > 0 ? `SCENE ${group.key} — ${group.name}` : `PREAMBLE — ${group.name}`;
-    rows.push([sceneLabel, '', '', '', '', '', '', '', '', '']);
-    rows.push(COL_HDR);
-
-    group.shots.forEach(tok => {
-      const a = tok.annotation;
-      // PERFORMANCE: Use Map.get() instead of array.find()
-      const shotName  = a.shotType ? (SHOT_TYPES_MAP.get(a.shotType)?.name || '') : '';
-      const angleName = a.angle    ? (ANGLES_MAP.get(a.angle)?.name         || '') : '';
-      const moveList  = (a.movements || []).map(mv => MOVEMENTS_MAP.get(mv)?.name).filter(Boolean).join('; ');
-      const elemLabel = ELEM_LABEL[tok.elementType] || 'Action';
-      const sceneName = tok.scene ? tok.scene.name : 'No Scene';
-      rows.push([
-        globalNum++,
-        sceneName,
-        tok.lineNumber,
-        elemLabel,
-        tok.text,
-        shotName,
-        angleName,
-        moveList,
-        a.motion || '',
-        (a.notes || '').replace(/"/g, '""')
-      ]);
+    document.getElementById('new-script-btn').addEventListener('click', () => {
+      if (!confirm('Start a new script? All current annotations will be lost.')) return;
+      tokens = [];
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('upload-screen').style.display = 'flex';
+      document.getElementById('new-script-btn').style.display = 'none';
+      document.getElementById('export-header-btn').style.display = 'none';
+      pasteArea.value = '';
+      fileInput.value = '';
     });
 
-    rows.push(new Array(10).fill('')); // blank separator
-  });
+    // ─────────────────────────────────────────────────────────────────
+    // EXPORT — CSV
+    // ─────────────────────────────────────────────────────────────────
 
-  const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\r\n');
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'shot-list.csv'; a.click();
-  URL.revokeObjectURL(url);
-}
+    function exportCSV() {
+      const allShots = tokens.filter(t => t.isWord && t.annotation);
+      if (!allShots.length) { alert('No shots to export yet.'); return; }
 
-// ─────────────────────────────────────────────────────────────────
-// EXPORT — PRINT
-// ─────────────────────────────────────────────────────────────────
+      const COL_HDR = ['Shot #', 'Scene', 'Line #', 'Element Type', 'Trigger Word', 'Shot Type', 'Camera Angle', 'Camera Movement(s)', 'Motion', 'Notes'];
+      const rows = [];
+      const groups = groupShotsByScene();
+      let globalNum = 1;
 
-function printShotList() {
-  const allShots = tokens.filter(t => t.isWord && t.annotation);
-  if (!allShots.length) { alert('No shots to print yet.'); return; }
+      groups.forEach(group => {
+        const sceneLabel = group.key > 0 ? `SCENE ${group.key} — ${group.name}` : `PREAMBLE — ${group.name}`;
+        rows.push([sceneLabel, '', '', '', '', '', '', '', '', '']);
+        rows.push(COL_HDR);
 
-  const groups = groupShotsByScene();
-  let globalNum = 1;
-  let body = '';
+        group.shots.forEach(tok => {
+          const a = tok.annotation;
+          const shotName = a.shotType ? (SHOT_TYPES.find(s => s.id === a.shotType)?.name || '') : '';
+          const angleName = a.angle ? (ANGLES.find(s => s.id === a.angle)?.name || '') : '';
+          const moveList = (a.movements || []).map(mv => MOVEMENTS.find(s => s.id === mv)?.name).filter(Boolean).join('; ');
+          const elemLabel = ELEM_LABEL[tok.elementType] || 'Action';
+          const sceneName = tok.scene ? tok.scene.name : 'No Scene';
+          rows.push([
+            globalNum++,
+            sceneName,
+            tok.lineNumber,
+            elemLabel,
+            tok.text,
+            shotName,
+            angleName,
+            moveList,
+            a.motion || '',
+            (a.notes || '').replace(/"/g, '""')
+          ]);
+        });
 
-  groups.forEach(group => {
-    const sceneLabel = group.key > 0 ? `Scene ${group.key} — ${group.name}` : `Preamble — ${group.name}`;
-    let rows = '';
-    group.shots.forEach(tok => {
-      const a = tok.annotation;
-      // PERFORMANCE: Use Map.get() instead of array.find()
-      const shotName  = a.shotType ? (SHOT_TYPES_MAP.get(a.shotType)?.name || '') : '—';
-      const angleName = a.angle    ? (ANGLES_MAP.get(a.angle)?.name         || '') : '—';
-      const moveList  = (a.movements || []).map(mv => MOVEMENTS_MAP.get(mv)?.name).filter(Boolean).join(', ') || '—';
-      const elemLabel = ELEM_LABEL[tok.elementType] || 'Action';
-      rows += `<tr>
+        rows.push(new Array(10).fill('')); // blank separator
+      });
+
+      const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\r\n');
+      const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'shot-list.csv'; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // EXPORT — PRINT
+    // ─────────────────────────────────────────────────────────────────
+
+    function printShotList() {
+      const allShots = tokens.filter(t => t.isWord && t.annotation);
+      if (!allShots.length) { alert('No shots to print yet.'); return; }
+
+      const groups = groupShotsByScene();
+      let globalNum = 1;
+      let body = '';
+
+      groups.forEach(group => {
+        const sceneLabel = group.key > 0 ? `Scene ${group.key} — ${group.name}` : `Preamble — ${group.name}`;
+        let rows = '';
+        group.shots.forEach(tok => {
+          const a = tok.annotation;
+          const shotName = a.shotType ? (SHOT_TYPES.find(s => s.id === a.shotType)?.name || '') : '—';
+          const angleName = a.angle ? (ANGLES.find(s => s.id === a.angle)?.name || '') : '—';
+          const moveList = (a.movements || []).map(mv => MOVEMENTS.find(s => s.id === mv)?.name).filter(Boolean).join(', ') || '—';
+          const elemLabel = ELEM_LABEL[tok.elementType] || 'Action';
+          rows += `<tr>
         <td>${globalNum++}</td>
         <td>${tok.lineNumber}</td>
         <td><span class="elem-pill elem-${tok.elementType || 'ACTION'}">${elemLabel}</span></td>
@@ -1229,10 +1534,9 @@ function printShotList() {
         <td>${a.motion ? (a.motion.charAt(0).toUpperCase() + a.motion.slice(1)) : '—'}</td>
         <td>${a.notes || ''}</td>
       </tr>`;
-    });
-    });
+        });
 
-    body += `
+        body += `
       <div class="scene-block">
         <div class="scene-heading">${sceneLabel}</div>
         <table>
@@ -1241,10 +1545,10 @@ function printShotList() {
         </table>
       </div>
     `;
-  });
+      });
 
-  const win = window.open('', '_blank');
-  win.document.write(`<!DOCTYPE html><html><head><title>Shot List</title><style>
+      const win = window.open('', '_blank');
+      win.document.write(`<!DOCTYPE html><html><head><title>Shot List</title><style>
     body{font-family:Arial,sans-serif;max-width:1050px;margin:36px auto;color:#111}
     h1{font-size:22px;border-bottom:3px solid #000;padding-bottom:8px;margin-bottom:4px}
     .meta{color:#666;font-size:13px;margin-bottom:28px}
@@ -1273,24 +1577,25 @@ function printShotList() {
   <div class="meta">Total shots: ${allShots.length} across ${groups.length} scene${groups.length !== 1 ? 's' : ''}</div>
   ${body}
   </body></html>`);
-  win.document.close();
-  win.print();
-}
+      win.document.close();
+      win.print();
+    }
 
-document.getElementById('export-csv-btn').addEventListener('click', exportCSV);
-document.getElementById('export-header-btn').addEventListener('click', exportCSV);
-document.getElementById('print-btn').addEventListener('click', printShotList);
+    document.getElementById('export-csv-btn').addEventListener('click', exportCSV);
+    document.getElementById('export-header-btn').addEventListener('click', exportCSV);
+    document.getElementById('print-btn').addEventListener('click', printShotList);
 
-// ─────────────────────────────────────────────────────────────────
-// KEYBOARD
-// ─────────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────
+    // KEYBOARD
+    // ─────────────────────────────────────────────────────────────────
 
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeModal();
-  if ((e.key === 'Enter' && e.ctrlKey) && document.getElementById('modal-backdrop').classList.contains('open')) {
-    saveShot();
-  }
-});
-</script>
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeModal();
+      if ((e.key === 'Enter' && e.ctrlKey) && document.getElementById('modal-backdrop').classList.contains('open')) {
+        saveShot();
+      }
+    });
+  </script>
 </body>
+
 </html>
