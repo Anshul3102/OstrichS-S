@@ -958,6 +958,8 @@
     let wordTokens = [];       // tokens where isWord === true  (cached for modal context)
     let activeId = null;  // word ID currently being edited
     let draft = {};       // temporary annotation being built in modal
+    let currentScriptText = '';
+    let currentFilename = '';
 
     const ELEM_LABEL = {
       SCENE_HEADING: 'Scene Heading',
@@ -1006,6 +1008,8 @@
         tokens = buildTokens(parsedLines);
         tokenMap = new Map(tokens.map(t => [t.id, t]));
         wordTokens = tokens.filter(t => t.isWord);
+        currentScriptText = text;
+        currentFilename = filename || '';
         document.getElementById('upload-screen').style.display = 'none';
         document.getElementById('app').style.display = 'block';
         document.getElementById('new-script-btn').style.display = 'block';
@@ -1014,6 +1018,7 @@
         renderScript();
         renderShotList();
         updateStats();
+        persistSession();
       } catch (err) {
         alert('Error loading script: ' + err.message);
         console.error(err);
@@ -1428,6 +1433,7 @@
       refreshAnnotationDisplay();
       renderShotList();
       updateStats();
+      persistSession();
     }
 
     function removeShot() {
@@ -1437,6 +1443,7 @@
       refreshAnnotationDisplay();
       renderShotList();
       updateStats();
+      persistSession();
     }
 
     document.getElementById('save-shot-btn').addEventListener('click', saveShot);
@@ -1533,6 +1540,11 @@
     document.getElementById('new-script-btn').addEventListener('click', () => {
       if (!confirm('Start a new script? All current annotations will be lost.')) return;
       tokens = [];
+      currentScriptText = '';
+      currentFilename = '';
+      localStorage.removeItem('sts_script');
+      localStorage.removeItem('sts_filename');
+      localStorage.removeItem('sts_annotations');
       document.getElementById('app').style.display = 'none';
       document.getElementById('upload-screen').style.display = 'flex';
       document.getElementById('new-script-btn').style.display = 'none';
@@ -1709,6 +1721,7 @@
       tok.annotation.needsRevision = needsRevision;
       refreshAnnotationDisplay();
       renderShotList();
+      persistSession();
     };
 
     document.getElementById('export-csv-btn').addEventListener('click', exportCSV);
@@ -1718,6 +1731,40 @@
     // ─────────────────────────────────────────────────────────────────
     // KEYBOARD
     // ─────────────────────────────────────────────────────────────────
+
+    // ─────────────────────────────────────────────────────────────────
+    // PERSISTENCE  — localStorage  (survives refresh, cleared by New Script)
+    // ─────────────────────────────────────────────────────────────────
+
+    function persistSession() {
+      if (!currentScriptText) return;
+      try {
+        const annotations = {};
+        tokens.forEach(t => { if (t.isWord && t.annotation) annotations[t.id] = t.annotation; });
+        localStorage.setItem('sts_script', currentScriptText);
+        localStorage.setItem('sts_filename', currentFilename);
+        localStorage.setItem('sts_annotations', JSON.stringify(annotations));
+      } catch (e) {
+        console.warn('Could not persist session (storage full?):', e);
+      }
+    }
+
+    (function restoreSession() {
+      const savedScript = localStorage.getItem('sts_script');
+      if (!savedScript) return;
+      const savedFilename = localStorage.getItem('sts_filename') || '';
+      const savedAnnotations = localStorage.getItem('sts_annotations');
+      loadScript(savedScript, savedFilename);
+      if (savedAnnotations) {
+        try {
+          const annotations = JSON.parse(savedAnnotations);
+          tokens.forEach(t => { if (t.isWord && annotations[t.id]) t.annotation = annotations[t.id]; });
+          refreshAnnotationDisplay();
+          renderShotList();
+          updateStats();
+        } catch (e) { console.warn('Could not restore annotations:', e); }
+      }
+    })();
 
     document.getElementById('motion-static').addEventListener('click', () => toggleMotion('static'));
     document.getElementById('motion-moving').addEventListener('click', () => toggleMotion('moving'));
