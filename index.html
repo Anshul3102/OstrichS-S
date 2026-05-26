@@ -817,6 +817,198 @@
     ::-webkit-scrollbar-thumb:hover {
       background: #444;
     }
+
+    /* ── Mode Tabs ── */
+    .mode-tabs {
+      display: none;
+      align-items: center;
+      gap: 3px;
+      background: var(--surface2);
+      border-radius: 8px;
+      padding: 3px;
+    }
+    .mode-tab {
+      padding: 5px 18px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-dim);
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .mode-tab:hover { color: var(--text); }
+    .mode-tab.active { background: var(--accent); color: #000; }
+
+    /* ── Write New button on upload screen ── */
+    .upload-divider-or {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-dim);
+      font-size: 13px;
+      margin: 18px 0 0;
+    }
+    .upload-divider-or::before,
+    .upload-divider-or::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .btn-write-new {
+      width: 100%;
+      margin-top: 12px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 14px;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+    }
+    .btn-write-new:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Write Screen ── */
+    #write-screen {
+      display: none;
+      flex-direction: column;
+      height: calc(100vh - 53px);
+    }
+    .write-toolbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 7px 32px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+    .elem-type-badge {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #000;
+      background: var(--accent);
+      padding: 3px 10px;
+      border-radius: 4px;
+      min-width: 148px;
+      text-align: center;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+    }
+    .write-hint {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+    .write-hint kbd {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-size: 10px;
+      font-family: 'Courier New', monospace;
+      color: var(--text);
+    }
+    .screenplay-editor-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 52px 40px;
+      background: var(--bg);
+    }
+    .screenplay-editor {
+      max-width: 660px;
+      margin: 0 auto;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    /* ── Script Lines ── */
+    .script-line {
+      outline: none;
+      min-height: 1.8em;
+      padding: 1px 0 1px 10px;
+      border-left: 2px solid transparent;
+      white-space: pre-wrap;
+      word-break: break-word;
+      caret-color: var(--accent);
+      color: var(--text);
+      transition: border-color 0.12s;
+      position: relative;
+    }
+    .script-line:focus { border-left-color: var(--accent); }
+    .script-line.active-line { background: rgba(245,242,232,0.03); }
+
+    /* placeholder on empty lines */
+    .script-line:empty::before {
+      content: attr(data-placeholder);
+      color: var(--text-dim);
+      pointer-events: none;
+      font-style: italic;
+    }
+
+    /* SCENE HEADING */
+    .script-line[data-type="scene"] {
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #ffffff;
+      margin-top: 22px;
+      letter-spacing: 0.3px;
+    }
+    .script-line[data-type="scene"]:first-child { margin-top: 0; }
+
+    /* ACTION */
+    .script-line[data-type="action"] {
+      color: var(--text);
+      margin-left: 0;
+    }
+
+    /* CHARACTER */
+    .script-line[data-type="character"] {
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-left: 210px;
+      margin-top: 16px;
+      color: var(--accent);
+    }
+
+    /* DIALOGUE */
+    .script-line[data-type="dialogue"] {
+      margin-left: 105px;
+      margin-right: 80px;
+      color: var(--text);
+    }
+
+    /* PARENTHETICAL */
+    .script-line[data-type="parenthetical"] {
+      margin-left: 140px;
+      margin-right: 110px;
+      color: var(--text-dim);
+      font-style: italic;
+    }
+
+    /* TRANSITION */
+    .script-line[data-type="transition"] {
+      text-transform: uppercase;
+      text-align: right;
+      color: var(--text-dim);
+      margin-top: 16px;
+      letter-spacing: 0.5px;
+      padding-right: 10px;
+    }
+
+    /* NOTE */
+    .script-line[data-type="note"] {
+      color: var(--text-dim);
+      font-style: italic;
+      font-size: 11px;
+      border-left: 2px solid var(--text-dim) !important;
+      padding-left: 10px;
+      margin-left: 0;
+    }
+
   </style>
 </head>
 
@@ -832,6 +1024,10 @@
         <span class="brand-title">OSTRICH SHOT MANAGER</span>
         <span class="brand-insta">@ostrich.cinemas</span>
       </div>
+    </div>
+    <div class="mode-tabs" id="mode-tabs">
+      <button class="mode-tab" id="btn-write-mode">Write</button>
+      <button class="mode-tab" id="btn-shots-mode">Shots</button>
     </div>
     <div class="header-actions">
       <button class="btn btn-secondary" id="new-script-btn" style="display:none">New Script</button>
@@ -855,6 +1051,8 @@
       <div class="paste-actions">
         <button class="btn btn-primary" id="load-paste-btn">Load Script</button>
       </div>
+      <div class="upload-divider-or">or start from scratch</div>
+      <button class="btn btn-write-new" id="write-new-btn">Write New Script</button>
     </div>
   </div>
 
@@ -893,6 +1091,21 @@
           <button class="btn btn-secondary" id="print-btn">Print List</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ WRITE SCREEN ═══════════════════════════ -->
+  <div id="write-screen">
+    <div class="write-toolbar">
+      <span class="elem-type-badge" id="elem-type-label">SCENE HEADING</span>
+      <span class="write-hint">
+        <kbd>Tab</kbd> change element &nbsp;·&nbsp;
+        <kbd>Enter</kbd> new line &nbsp;·&nbsp;
+        <kbd>Backspace</kbd> on empty line removes it
+      </span>
+    </div>
+    <div class="screenplay-editor-wrap">
+      <div class="screenplay-editor" id="screenplay-editor"></div>
     </div>
   </div>
 
@@ -1001,6 +1214,228 @@
     let currentScriptText = '';
     let currentFilename = '';
     let reviewWindow = null;  // reference to open review tab
+    let currentMode = 'upload'; // 'upload' | 'write' | 'shots'
+
+    // ─────────────────────────────────────────────────────────────────
+    // WRITE MODE — element config
+    // ─────────────────────────────────────────────────────────────────
+
+    const EDITOR_TYPES = [
+      { id: 'scene',         label: 'Scene Heading',  placeholder: 'INT. LOCATION - DAY' },
+      { id: 'action',        label: 'Action',         placeholder: 'Action description...' },
+      { id: 'character',     label: 'Character',      placeholder: 'CHARACTER NAME' },
+      { id: 'dialogue',      label: 'Dialogue',       placeholder: 'Dialogue...' },
+      { id: 'parenthetical', label: 'Parenthetical',  placeholder: 'beat' },
+      { id: 'transition',    label: 'Transition',     placeholder: 'CUT TO:' },
+    ];
+    const EDITOR_TYPE_IDS = EDITOR_TYPES.map(t => t.id);
+
+    // Enter key: what type comes next by default
+    const ENTER_NEXT = {
+      scene: 'action', action: 'action', character: 'dialogue',
+      dialogue: 'character', parenthetical: 'dialogue', transition: 'scene',
+    };
+
+    function editorTypeMeta(id) {
+      return EDITOR_TYPES.find(t => t.id === id) || EDITOR_TYPES[1];
+    }
+
+    function updateElemLabel(type) {
+      const el = document.getElementById('elem-type-label');
+      if (el) el.textContent = editorTypeMeta(type).label.toUpperCase();
+    }
+
+    function moveCursorToEnd(el) {
+      el.focus();
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+
+    function setLineType(div, type) {
+      div.dataset.type = type;
+      div.dataset.placeholder = editorTypeMeta(type).placeholder;
+    }
+
+    function createEditorLine(type, text) {
+      const div = document.createElement('div');
+      div.className = 'script-line';
+      div.contentEditable = 'true';
+      setLineType(div, type || 'action');
+      div.textContent = (text != null) ? text : '';
+
+      div.addEventListener('focus', function() {
+        document.querySelectorAll('.script-line').forEach(l => l.classList.remove('active-line'));
+        div.classList.add('active-line');
+        updateElemLabel(div.dataset.type);
+      });
+
+      div.addEventListener('keydown', editorKeydown);
+
+      // debounced save on input
+      let saveTimer;
+      div.addEventListener('input', function() {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(saveEditorElements, 500);
+      });
+
+      return div;
+    }
+
+    function editorKeydown(e) {
+      const line = e.target;
+      const type = line.dataset.type;
+      const editor = document.getElementById('screenplay-editor');
+      const lines = [...editor.querySelectorAll('.script-line')];
+      const idx = lines.indexOf(line);
+
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const cur = EDITOR_TYPE_IDS.indexOf(type);
+        const next = e.shiftKey
+          ? EDITOR_TYPE_IDS[(cur - 1 + EDITOR_TYPE_IDS.length) % EDITOR_TYPE_IDS.length]
+          : EDITOR_TYPE_IDS[(cur + 1) % EDITOR_TYPE_IDS.length];
+        setLineType(line, next);
+        updateElemLabel(next);
+        saveEditorElements();
+        return;
+      }
+
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        const nextType = ENTER_NEXT[type] || 'action';
+        const newLine = createEditorLine(nextType, '');
+        line.after(newLine);
+        moveCursorToEnd(newLine);
+        saveEditorElements();
+        return;
+      }
+
+      if (e.key === 'Enter' && e.shiftKey) {
+        // Shift+Enter always creates action line
+        e.preventDefault();
+        const newLine = createEditorLine('action', '');
+        line.after(newLine);
+        moveCursorToEnd(newLine);
+        saveEditorElements();
+        return;
+      }
+
+      if (e.key === 'Backspace' && line.textContent === '') {
+        e.preventDefault();
+        if (lines.length > 1) {
+          const target = lines[idx - 1] || lines[idx + 1];
+          line.remove();
+          if (target) moveCursorToEnd(target);
+          saveEditorElements();
+        }
+        return;
+      }
+
+      if (e.key === 'ArrowUp' && idx > 0) {
+        e.preventDefault();
+        moveCursorToEnd(lines[idx - 1]);
+        return;
+      }
+
+      if (e.key === 'ArrowDown' && idx < lines.length - 1) {
+        e.preventDefault();
+        moveCursorToEnd(lines[idx + 1]);
+        return;
+      }
+    }
+
+    function loadEditorElements(elements) {
+      const editor = document.getElementById('screenplay-editor');
+      editor.innerHTML = '';
+      const toLoad = (elements && elements.length) ? elements : [{ type: 'scene', text: '' }];
+      toLoad.forEach(el => editor.appendChild(createEditorLine(el.type, el.text)));
+    }
+
+    function saveEditorElements() {
+      const editor = document.getElementById('screenplay-editor');
+      if (!editor) return;
+      const data = [...editor.querySelectorAll('.script-line')].map(l => ({
+        type: l.dataset.type,
+        text: l.textContent
+      }));
+      try { localStorage.setItem('sts_elements', JSON.stringify(data)); } catch(e) {}
+    }
+
+    function serializeEditorToText() {
+      const editor = document.getElementById('screenplay-editor');
+      return [...editor.querySelectorAll('.script-line')].map(line => {
+        const type = line.dataset.type;
+        let text = line.textContent;
+        if (type === 'scene' || type === 'character' || type === 'transition') {
+          text = text.toUpperCase();
+        }
+        if (type === 'parenthetical') {
+          text = text.trim();
+          if (text && !text.startsWith('(')) text = '(' + text;
+          if (text && !text.endsWith(')')) text = text + ')';
+        }
+        return text;
+      }).join('\n');
+    }
+
+    // ── Mode switching ──
+
+    function switchToWrite() {
+      currentMode = 'write';
+      document.getElementById('upload-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('write-screen').style.display = 'flex';
+      document.getElementById('mode-tabs').style.display = 'flex';
+      document.getElementById('btn-write-mode').classList.add('active');
+      document.getElementById('btn-shots-mode').classList.remove('active');
+      document.getElementById('new-script-btn').style.display = 'block';
+      document.getElementById('export-header-btn').style.display = 'none';
+      localStorage.setItem('sts_mode', 'write');
+      setTimeout(() => {
+        const first = document.querySelector('#screenplay-editor .script-line');
+        if (first) first.focus();
+      }, 60);
+    }
+
+    function switchToShots() {
+      const text = serializeEditorToText();
+      if (!text.trim()) { alert('Script is empty — write something first.'); return; }
+      currentMode = 'shots';
+      localStorage.setItem('sts_mode', 'shots');
+      document.getElementById('write-screen').style.display = 'none';
+      document.getElementById('btn-shots-mode').classList.add('active');
+      document.getElementById('btn-write-mode').classList.remove('active');
+      loadScript(text, currentFilename || 'Written Script', false);
+    }
+
+    function startWriteMode() {
+      const saved = localStorage.getItem('sts_elements');
+      let elements = null;
+      if (saved) { try { elements = JSON.parse(saved); } catch(e) {} }
+      loadEditorElements(elements);
+      switchToWrite();
+    }
+
+    // ── Header mode tab wiring ──
+    document.getElementById('btn-write-mode').addEventListener('click', function() {
+      if (currentMode === 'write') return;
+      startWriteMode();
+    });
+    document.getElementById('btn-shots-mode').addEventListener('click', function() {
+      if (currentMode === 'shots') return;
+      switchToShots();
+    });
+
+    // ── Upload screen Write New Script button ──
+    document.getElementById('write-new-btn').addEventListener('click', function() {
+      localStorage.removeItem('sts_elements');
+      loadEditorElements(null);
+      switchToWrite();
+    });
 
     const ELEM_LABEL = {
       SCENE_HEADING: 'Scene Heading',
@@ -1051,8 +1486,13 @@
         wordTokens = tokens.filter(t => t.isWord);
         currentScriptText = text;
         currentFilename = filename || '';
+        currentMode = 'shots';
         document.getElementById('upload-screen').style.display = 'none';
+        document.getElementById('write-screen').style.display = 'none';
         document.getElementById('app').style.display = 'block';
+        document.getElementById('mode-tabs').style.display = 'flex';
+        document.getElementById('btn-shots-mode').classList.add('active');
+        document.getElementById('btn-write-mode').classList.remove('active');
         document.getElementById('new-script-btn').style.display = 'block';
         document.getElementById('export-header-btn').style.display = 'block';
         buildGrids();
@@ -1586,13 +2026,22 @@
     // ─────────────────────────────────────────────────────────────────
 
     document.getElementById('new-script-btn').addEventListener('click', () => {
-      if (!confirm('Start a new script? All current annotations will be lost.')) return;
+      if (!confirm('Start a new script? All current work will be lost.')) return;
       tokens = [];
       currentScriptText = '';
       currentFilename = '';
+      currentMode = 'upload';
       reviewWindow = null;
-      try { localStorage.removeItem('sts_script'); localStorage.removeItem('sts_filename'); localStorage.removeItem('sts_annotations'); } catch(e) {}
+      try {
+        localStorage.removeItem('sts_script');
+        localStorage.removeItem('sts_filename');
+        localStorage.removeItem('sts_annotations');
+        localStorage.removeItem('sts_elements');
+        localStorage.removeItem('sts_mode');
+      } catch(e) {}
       document.getElementById('app').style.display = 'none';
+      document.getElementById('write-screen').style.display = 'none';
+      document.getElementById('mode-tabs').style.display = 'none';
       document.getElementById('upload-screen').style.display = 'flex';
       document.getElementById('new-script-btn').style.display = 'none';
       document.getElementById('export-header-btn').style.display = 'none';
@@ -1844,6 +2293,19 @@
     }
 
     (function restoreSession() {
+      const savedMode = localStorage.getItem('sts_mode');
+
+      // Restore write mode
+      if (savedMode === 'write') {
+        const savedElements = localStorage.getItem('sts_elements');
+        let elements = null;
+        if (savedElements) { try { elements = JSON.parse(savedElements); } catch(e) {} }
+        loadEditorElements(elements);
+        switchToWrite();
+        return;
+      }
+
+      // Restore shots mode
       const savedScript = localStorage.getItem('sts_script');
       if (!savedScript) return;
       const savedFilename = localStorage.getItem('sts_filename') || '';
