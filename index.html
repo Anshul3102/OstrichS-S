@@ -21,8 +21,10 @@
       --accent2: #c47d0e;
       --text: #e0e0e8;
       --text-dim: #888899;
-      --annotated-bg: rgba(232, 160, 32, 0.18);
-      --annotated-border: #e8a020;
+      --annotated-bg: rgba(61, 214, 140, 0.15);
+      --annotated-border: #3dd68c;
+      --revision-bg: rgba(255, 60, 60, 0.15);
+      --revision-border: #ff4444;
     }
 
     body {
@@ -244,12 +246,21 @@
     }
 
     .word-token.annotated:hover {
-      background: rgba(232, 160, 32, 0.32);
+      background: rgba(61, 214, 140, 0.28);
+    }
+
+    .word-token.needs-revision {
+      background: var(--revision-bg) !important;
+      border-bottom: 2px solid var(--revision-border) !important;
+    }
+
+    .word-token.needs-revision:hover {
+      background: rgba(255, 60, 60, 0.28) !important;
     }
 
     .shot-badge {
       display: inline-block;
-      background: var(--accent);
+      background: #3dd68c;
       color: #000;
       font-size: 9px;
       font-weight: 800;
@@ -312,6 +323,19 @@
 
     .shot-card:hover {
       border-color: var(--accent);
+    }
+
+    .shot-card.needs-revision-card {
+      border-color: var(--revision-border);
+      border-left: 3px solid var(--revision-border);
+    }
+
+    .shot-card.needs-revision-card .shot-num {
+      color: var(--revision-border);
+    }
+
+    .shot-badge.revision {
+      background: #ff4444;
     }
 
     .shot-num {
@@ -1194,15 +1218,17 @@
       tokens.forEach(tok => {
         if (tok.isWord) {
           const span = document.createElement('span');
+          const needsRevision = tok.annotation && tok.annotation.needsRevision;
           span.className = 'word-token'
             + (tok.annotation ? ' annotated' : '')
+            + (needsRevision ? ' needs-revision' : '')
             + (tok.isHeading ? ' is-heading' : '')
             + (tok.elementType && !tok.isHeading ? ' elem-' + tok.elementType : '');
           span.dataset.id = tok.id;
           span.textContent = tok.text;
           if (tok.annotation) {
             const badge = document.createElement('sup');
-            badge.className = 'shot-badge';
+            badge.className = 'shot-badge' + (needsRevision ? ' revision' : '');
             badge.textContent = shotNumMap.get(tok.id);
             span.appendChild(badge);
           }
@@ -1231,9 +1257,11 @@
         if (!span) return;
         const shotNum = shotNumMap.get(tok.id);
         const isAnnotated = shotNum !== undefined;
+        const needsRevision = isAnnotated && tok.annotation.needsRevision;
 
         const newClass = 'word-token'
           + (isAnnotated ? ' annotated' : '')
+          + (needsRevision ? ' needs-revision' : '')
           + (tok.isHeading ? ' is-heading' : '')
           + (tok.elementType && !tok.isHeading ? ' elem-' + tok.elementType : '');
         if (span.className !== newClass) span.className = newClass;
@@ -1242,9 +1270,10 @@
         if (isAnnotated) {
           if (!badge) {
             badge = document.createElement('sup');
-            badge.className = 'shot-badge';
             span.appendChild(badge);
           }
+          const badgeClass = 'shot-badge' + (needsRevision ? ' revision' : '');
+          if (badge.className !== badgeClass) badge.className = badgeClass;
           if (badge.textContent !== String(shotNum)) badge.textContent = shotNum;
         } else if (badge) {
           badge.remove();
@@ -1437,7 +1466,7 @@
         group.shots.forEach(tok => {
           const a = tok.annotation;
           const card = document.createElement('div');
-          card.className = 'shot-card';
+          card.className = 'shot-card' + (a.needsRevision ? ' needs-revision-card' : '');
 
           const shotName = a.shotType ? (SHOT_TYPES.find(s => s.id === a.shotType)?.name || '') : '';
           const angleName = a.angle ? (ANGLES.find(s => s.id === a.angle)?.name || '') : '';
@@ -1570,7 +1599,9 @@
           const angleName = a.angle ? (ANGLES.find(s => s.id === a.angle)?.name || '') : '—';
           const moveList = (a.movements || []).map(mv => MOVEMENTS.find(s => s.id === mv)?.name).filter(Boolean).join(', ') || '—';
           const elemLabel = ELEM_LABEL[tok.elementType] || 'Action';
-          rows += `<tr>
+          const isRevision = a.needsRevision;
+          rows += `<tr id="row-${tok.id}" class="${isRevision ? 'revision-row' : ''}">
+        <td class="no-print cb-cell"><input type="checkbox" ${isRevision ? 'checked' : ''} onchange="toggleRevision(${tok.id}, this.checked)" title="Mark for revision"></td>
         <td>${globalNum++}</td>
         <td>${tok.lineNumber}</td>
         <td><span class="elem-pill elem-${tok.elementType || 'ACTION'}">${elemLabel}</span></td>
@@ -1587,7 +1618,7 @@
       <div class="scene-block">
         <div class="scene-heading">${sceneLabel}</div>
         <table>
-          <tr><th>#</th><th>Line</th><th>Element</th><th>Word</th><th>Shot Type</th><th>Angle</th><th>Movement</th><th>Motion</th><th>Notes</th></tr>
+          <tr><th class="no-print cb-cell">Revise</th><th>#</th><th>Line</th><th>Element</th><th>Word</th><th>Shot Type</th><th>Angle</th><th>Movement</th><th>Motion</th><th>Notes</th></tr>
           ${rows}
         </table>
       </div>
@@ -1595,21 +1626,28 @@
       });
 
       const win = window.open('', '_blank');
-      win.document.write(`<!DOCTYPE html><html><head><title>Shot List</title><style>
-    body{font-family:Arial,sans-serif;max-width:1050px;margin:36px auto;color:#111}
-    h1{font-size:22px;border-bottom:3px solid #000;padding-bottom:8px;margin-bottom:4px}
-    .meta{color:#666;font-size:13px;margin-bottom:28px}
+      win.document.write(`<!DOCTYPE html><html><head><title>Shot List Review</title><style>
+    *{box-sizing:border-box}
+    body{font-family:Arial,sans-serif;max-width:1100px;margin:0 auto;color:#111;padding:0}
+    .toolbar{background:#111;color:#fff;padding:18px 32px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;position:sticky;top:0;z-index:10}
+    .toolbar h1{font-size:18px;font-weight:700;margin:0;flex:1}
+    .toolbar .meta{font-size:12px;color:#aaa}
+    .toolbar .instructions{font-size:12px;color:#ccc;flex-basis:100%}
+    .print-btn{background:#3dd68c;color:#000;border:none;padding:9px 22px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer}
+    .print-btn:hover{background:#2fb87a}
+    .content{padding:28px 32px}
+    h1.print-only{display:none;font-size:22px;border-bottom:3px solid #000;padding-bottom:8px;margin-bottom:4px}
+    .meta.print-only{display:none;color:#666;font-size:13px;margin-bottom:24px}
     .scene-block{margin-bottom:36px}
-    .scene-heading{
-      font-family:'Courier New',monospace;font-size:13px;font-weight:700;
-      text-transform:uppercase;letter-spacing:0.5px;
-      background:#111;color:#fff;
-      padding:8px 14px;border-radius:4px 4px 0 0;
-    }
+    .scene-heading{font-family:'Courier New',monospace;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:#111;color:#fff;padding:8px 14px;border-radius:4px 4px 0 0}
     table{width:100%;border-collapse:collapse;font-size:12px;border:1px solid #ddd}
     th{background:#333;color:#fff;padding:6px 10px;text-align:left;font-size:11px;letter-spacing:0.4px;white-space:nowrap}
     td{padding:6px 10px;border-bottom:1px solid #e8e8e8;vertical-align:top}
     tr:nth-child(even) td{background:#f9f9f9}
+    .cb-cell{width:52px;text-align:center}
+    input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:#ff4444}
+    .revision-row td{background:rgba(255,60,60,0.08)!important;color:#cc2222}
+    .revision-row strong{color:#cc2222}
     .elem-pill{display:inline-block;font-size:10px;padding:1px 7px;border-radius:8px;font-weight:600;white-space:nowrap}
     .elem-ACTION{background:#eee;color:#555}
     .elem-CHARACTER{background:#fff3d4;color:#a06800}
@@ -1618,15 +1656,47 @@
     .elem-SCENE_HEADING{background:#eee;color:#444}
     .elem-SUBHEADER{background:#eee;color:#555}
     .elem-TRANSITION{background:#f0f0f0;color:#888}
-    @media print{body{margin:16px}.scene-block{break-inside:avoid}}
+    @media print{
+      .no-print{display:none!important}
+      .toolbar{display:none!important}
+      h1.print-only,.meta.print-only{display:block}
+      body{padding:0}
+      .content{padding:16px}
+      .scene-block{break-inside:avoid}
+    }
   </style></head><body>
-  <h1>Shot List</h1>
-  <div class="meta">Total shots: ${allShots.length} across ${groups.length} scene${groups.length !== 1 ? 's' : ''}</div>
+  <div class="toolbar no-print">
+    <h1>Shot List Review</h1>
+    <span class="meta">${allShots.length} shot${allShots.length !== 1 ? 's' : ''} · ${groups.length} scene${groups.length !== 1 ? 's' : ''}</span>
+    <button class="print-btn" onclick="window.print()">Print Shot List</button>
+    <p class="instructions">Check any shot that needs revision — it turns red here and in your script. Go back, fix it, then re-open this list.</p>
+  </div>
+  <h1 class="print-only">Shot List</h1>
+  <div class="meta print-only">${allShots.length} shots · ${groups.length} scenes</div>
+  <div class="content">
   ${body}
+  </div>
+  <script>
+    function toggleRevision(tokenId, checked) {
+      var row = document.getElementById('row-' + tokenId);
+      if (row) row.classList.toggle('revision-row', checked);
+      if (window.opener && !window.opener.closed) {
+        window.opener.toggleRevision(tokenId, checked);
+      }
+    }
+  <\/script>
   </body></html>`);
       win.document.close();
-      win.print();
     }
+
+    // Called by the review tab to flag/unflag a shot for revision
+    window.toggleRevision = function(tokenId, needsRevision) {
+      const tok = tokenMap.get(tokenId);
+      if (!tok || !tok.annotation) return;
+      tok.annotation.needsRevision = needsRevision;
+      refreshAnnotationDisplay();
+      renderShotList();
+    };
 
     document.getElementById('export-csv-btn').addEventListener('click', exportCSV);
     document.getElementById('export-header-btn').addEventListener('click', exportCSV);
