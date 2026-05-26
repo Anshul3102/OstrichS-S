@@ -1420,9 +1420,46 @@
       switchToWrite();
     }
 
+    // Convert loaded tokens back into editor element array
+    function convertTokensToEditorElements() {
+      if (!tokens.length) return null;
+      const TOKEN_TO_EDITOR = {
+        SCENE_HEADING: 'scene', ACTION: 'action', CHARACTER: 'character',
+        DIALOGUE: 'dialogue', PARENTHETICAL: 'parenthetical',
+        TRANSITION: 'transition', SUBHEADER: 'action',
+      };
+      // Group tokens by lineNumber, preserving order
+      const lineMap = new Map();
+      tokens.forEach(t => {
+        if (!lineMap.has(t.lineNumber)) {
+          lineMap.set(t.lineNumber, { elementType: t.elementType, parts: [] });
+        }
+        lineMap.get(t.lineNumber).parts.push(t.text);
+      });
+      const elements = [];
+      [...lineMap.entries()]
+        .sort((a, b) => a[0] - b[0])
+        .forEach(([, line]) => {
+          const text = line.parts.join('').trim();
+          if (!text) return;
+          elements.push({ type: TOKEN_TO_EDITOR[line.elementType] || 'action', text });
+        });
+      return elements.length ? elements : null;
+    }
+
     // ── Header mode tab wiring ──
     document.getElementById('btn-write-mode').addEventListener('click', function() {
       if (currentMode === 'write') return;
+      // Coming from shots mode with a loaded script — reconstruct editor from tokens
+      if (currentMode === 'shots' && tokens.length) {
+        const elements = convertTokensToEditorElements();
+        if (elements) {
+          loadEditorElements(elements);
+          saveEditorElements();
+          switchToWrite();
+          return;
+        }
+      }
       startWriteMode();
     });
     document.getElementById('btn-shots-mode').addEventListener('click', function() {
