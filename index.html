@@ -460,6 +460,16 @@
       color: #ff7046;
     }
 
+    .tag.t-height {
+      border-color: #e8a44a;
+      color: #e8a44a;
+    }
+
+    .tag.t-mdir {
+      border-color: #4affb8;
+      color: #4affb8;
+    }
+
     .shot-notes-preview {
       margin-top: 7px;
       font-size: 11px;
@@ -660,6 +670,26 @@
 
     .opt-btn.sel-move .opt-desc {
       color: rgba(61, 214, 140, .65);
+    }
+
+    .opt-btn.sel-height {
+      border-color: #e8a44a;
+      background: rgba(232, 164, 74, .13);
+      color: #e8a44a;
+    }
+
+    .opt-btn.sel-height .opt-desc {
+      color: rgba(232, 164, 74, .65);
+    }
+
+    .opt-btn.sel-mdir {
+      border-color: #4affb8;
+      background: rgba(74, 255, 184, .1);
+      color: #4affb8;
+    }
+
+    .opt-btn.sel-mdir .opt-desc {
+      color: rgba(74, 255, 184, .6);
     }
 
     .motion-row {
@@ -1222,6 +1252,12 @@
           <div class="opt-grid" id="angle-grid"></div>
         </div>
 
+        <!-- Camera Height -->
+        <div class="section">
+          <div class="section-label">Camera Height</div>
+          <div class="opt-grid" id="height-grid"></div>
+        </div>
+
         <!-- Camera Movement -->
         <div class="section">
           <div class="section-label">Camera Movement <span
@@ -1237,6 +1273,14 @@
             <button class="motion-btn" data-motion="static" id="motion-static">Static</button>
             <button class="motion-btn" data-motion="moving" id="motion-moving">Moving</button>
           </div>
+        </div>
+
+        <!-- Motion Direction -->
+        <div class="section">
+          <div class="section-label">Motion Direction <span
+              style="color:var(--text-dim);font-weight:400;text-transform:none;font-size:11px">(select all that
+              apply)</span></div>
+          <div class="opt-grid" id="motion-dir-grid"></div>
         </div>
 
         <!-- Notes -->
@@ -1285,6 +1329,23 @@
       { id: 'handheld', name: 'Handheld', desc: 'Operator-carried — natural, shaky feel' },
       { id: 'steadicam', name: 'Steadicam', desc: 'Stabilised operator-mount — smooth movement' },
       { id: 'crane', name: 'Crane / Jib', desc: 'Mounted on crane — sweeping high-angle moves' },
+    ];
+
+    const CAMERA_HEIGHTS = [
+      { id: 'above-head', name: 'Above Head', desc: 'Camera positioned above subject\'s head' },
+      { id: 'eye-level', name: 'Eye Level', desc: 'Camera at subject\'s eye height' },
+      { id: 'waist-level', name: 'Waist Level', desc: 'Camera at subject\'s waist height' },
+      { id: 'foot-level', name: 'Foot Level', desc: 'Camera near ground, looking up' },
+    ];
+
+    const MOTION_DIRS = [
+      { id: 'straight', name: 'Straight', desc: 'Direct linear path toward or away' },
+      { id: 'horizontal', name: 'Horizontal', desc: 'Side-to-side across the frame' },
+      { id: 'diagonal', name: 'Diagonal', desc: 'Angled path across the scene' },
+      { id: 'parallel', name: 'Parallel', desc: 'Moves alongside subject direction' },
+      { id: 'opposite', name: 'Opposite', desc: 'Moves against subject\'s direction' },
+      { id: 'clockwise', name: 'Clockwise', desc: 'Circular orbit clockwise around subject' },
+      { id: 'anti-clockwise', name: 'Anti-clockwise', desc: 'Circular orbit counter-clockwise' },
     ];
 
     // ─────────────────────────────────────────────────────────────────
@@ -2410,6 +2471,20 @@
         ag.appendChild(btn);
       });
 
+      // Camera Height — single select
+      const hg = document.getElementById('height-grid');
+      hg.innerHTML = '';
+      CAMERA_HEIGHTS.forEach(h => {
+        const btn = makeOptBtn(h, 'sel-height');
+        btn.addEventListener('click', () => {
+          const wasSelected = btn.classList.contains('sel-height');
+          hg.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('sel-height'));
+          if (!wasSelected) { btn.classList.add('sel-height'); draft.cameraHeight = h.id; }
+          else draft.cameraHeight = null;
+        });
+        hg.appendChild(btn);
+      });
+
       // Movement — multi select
       const mg = document.getElementById('movement-grid');
       mg.innerHTML = '';
@@ -2422,6 +2497,20 @@
           else draft.movements = (draft.movements || []).filter(x => x !== mv.id);
         });
         mg.appendChild(btn);
+      });
+
+      // Motion Direction — multi select
+      const mdg = document.getElementById('motion-dir-grid');
+      mdg.innerHTML = '';
+      MOTION_DIRS.forEach(md => {
+        const btn = makeOptBtn(md, 'sel-mdir');
+        btn.addEventListener('click', () => {
+          btn.classList.toggle('sel-mdir');
+          const sel = btn.classList.contains('sel-mdir');
+          if (sel) draft.motionDirs = [...(draft.motionDirs || []), md.id];
+          else draft.motionDirs = (draft.motionDirs || []).filter(x => x !== md.id);
+        });
+        mdg.appendChild(btn);
       });
 
     }
@@ -2447,7 +2536,7 @@
     function openModal(wordId) {
       activeId = wordId;
       const tok = tokenMap.get(wordId);
-      draft = tok.annotation ? JSON.parse(JSON.stringify(tok.annotation)) : { shotType: null, angle: null, movements: [], motion: null, notes: '' };
+      draft = tok.annotation ? JSON.parse(JSON.stringify(tok.annotation)) : { shotType: null, angle: null, cameraHeight: null, movements: [], motion: null, motionDirs: [], notes: '' };
 
       // Label
       document.getElementById('modal-word-label').textContent = `"${tok.text}"`;
@@ -2471,7 +2560,9 @@
       // Reset grid selections without rebuilding DOM
       document.querySelectorAll('#shot-type-grid .opt-btn').forEach(b => b.classList.remove('sel-shot'));
       document.querySelectorAll('#angle-grid .opt-btn').forEach(b => b.classList.remove('sel-angle'));
+      document.querySelectorAll('#height-grid .opt-btn').forEach(b => b.classList.remove('sel-height'));
       document.querySelectorAll('#movement-grid .opt-btn').forEach(b => b.classList.remove('sel-move'));
+      document.querySelectorAll('#motion-dir-grid .opt-btn').forEach(b => b.classList.remove('sel-mdir'));
       document.getElementById('motion-static').classList.remove('sel-static');
       document.getElementById('motion-moving').classList.remove('sel-moving');
 
@@ -2483,9 +2574,17 @@
         const b = document.querySelector(`#angle-grid [data-id="${draft.angle}"]`);
         if (b) b.classList.add('sel-angle');
       }
+      if (draft.cameraHeight) {
+        const b = document.querySelector(`#height-grid [data-id="${draft.cameraHeight}"]`);
+        if (b) b.classList.add('sel-height');
+      }
       (draft.movements || []).forEach(mv => {
         const b = document.querySelector(`#movement-grid [data-id="${mv}"]`);
         if (b) b.classList.add('sel-move');
+      });
+      (draft.motionDirs || []).forEach(md => {
+        const b = document.querySelector(`#motion-dir-grid [data-id="${md}"]`);
+        if (b) b.classList.add('sel-mdir');
       });
       if (draft.motion) {
         const b = document.getElementById('motion-' + draft.motion);
@@ -2515,7 +2614,7 @@
       if (activeId === null) return;
       const savedId = activeId;
       draft.notes = document.getElementById('shot-notes').value.trim();
-      const hasAny = draft.shotType || draft.angle || (draft.movements && draft.movements.length) || draft.motion || draft.notes;
+      const hasAny = draft.shotType || draft.angle || draft.cameraHeight || (draft.movements && draft.movements.length) || draft.motion || (draft.motionDirs && draft.motionDirs.length) || draft.notes;
       tokenMap.get(savedId).annotation = hasAny ? { ...draft, needsRevision: false } : null;
       closeModal();
       refreshAnnotationDisplay();
@@ -2587,14 +2686,18 @@
 
           const shotName = a.shotType ? (SHOT_TYPES.find(s => s.id === a.shotType)?.name || '') : '';
           const angleName = a.angle ? (ANGLES.find(s => s.id === a.angle)?.name || '') : '';
+          const heightName = a.cameraHeight ? (CAMERA_HEIGHTS.find(s => s.id === a.cameraHeight)?.name || '') : '';
           const moveNames = (a.movements || []).map(mv => MOVEMENTS.find(s => s.id === mv)?.name).filter(Boolean);
+          const motionDirNames = (a.motionDirs || []).map(md => MOTION_DIRS.find(s => s.id === md)?.name).filter(Boolean);
 
           let tags = '';
           if (shotName) tags += `<span class="tag t-shot">${shotName}</span>`;
           if (angleName) tags += `<span class="tag t-angle">${angleName}</span>`;
+          if (heightName) tags += `<span class="tag t-height">${heightName}</span>`;
           moveNames.forEach(mn => tags += `<span class="tag t-move">${mn}</span>`);
           if (a.motion === 'static') tags += `<span class="tag t-static">Static</span>`;
           if (a.motion === 'moving') tags += `<span class="tag t-moving">Moving</span>`;
+          motionDirNames.forEach(dn => tags += `<span class="tag t-mdir">${dn}</span>`);
           if (!tags) tags = `<span class="tag">No details — click to edit</span>`;
 
           const elemL = ELEM_LABEL[tok.elementType] || 'Action';
@@ -2666,21 +2769,23 @@
       const allShots = tokens.filter(t => t.isWord && t.annotation);
       if (!allShots.length) { alert('No shots to export yet.'); return; }
 
-      const COL_HDR = ['Shot #', 'Scene', 'Line #', 'Element Type', 'Trigger Word', 'Shot Type', 'Camera Angle', 'Camera Movement(s)', 'Motion', 'Notes'];
+      const COL_HDR = ['Shot #', 'Scene', 'Line #', 'Element Type', 'Trigger Word', 'Shot Type', 'Camera Angle', 'Camera Height', 'Camera Movement(s)', 'Motion', 'Motion Direction(s)', 'Notes'];
       const rows = [];
       const groups = groupShotsByScene();
       let globalNum = 1;
 
       groups.forEach(group => {
         const sceneLabel = group.key > 0 ? `SCENE ${group.key} — ${group.name}` : `PREAMBLE — ${group.name}`;
-        rows.push([sceneLabel, '', '', '', '', '', '', '', '', '']);
+        rows.push([sceneLabel, '', '', '', '', '', '', '', '', '', '', '']);
         rows.push(COL_HDR);
 
         group.shots.forEach(tok => {
           const a = tok.annotation;
           const shotName = a.shotType ? (SHOT_TYPES.find(s => s.id === a.shotType)?.name || '') : '';
           const angleName = a.angle ? (ANGLES.find(s => s.id === a.angle)?.name || '') : '';
+          const heightNameCSV = a.cameraHeight ? (CAMERA_HEIGHTS.find(s => s.id === a.cameraHeight)?.name || '') : '';
           const moveList = (a.movements || []).map(mv => MOVEMENTS.find(s => s.id === mv)?.name).filter(Boolean).join('; ');
+          const motionDirListCSV = (a.motionDirs || []).map(md => MOTION_DIRS.find(s => s.id === md)?.name).filter(Boolean).join('; ');
           const elemLabel = ELEM_LABEL[tok.elementType] || 'Action';
           const sceneName = tok.scene ? tok.scene.name : 'No Scene';
           rows.push([
@@ -2691,13 +2796,15 @@
             tok.text,
             shotName,
             angleName,
+            heightNameCSV,
             moveList,
             a.motion || '',
+            motionDirListCSV,
             (a.notes || '').replace(/"/g, '""')
           ]);
         });
 
-        rows.push(new Array(10).fill('')); // blank separator
+        rows.push(new Array(12).fill('')); // blank separator
       });
 
       const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\r\n');
@@ -2727,7 +2834,9 @@
           const a = tok.annotation;
           const shotName = a.shotType ? (SHOT_TYPES.find(s => s.id === a.shotType)?.name || '') : '—';
           const angleName = a.angle ? (ANGLES.find(s => s.id === a.angle)?.name || '') : '—';
+          const heightName = a.cameraHeight ? (CAMERA_HEIGHTS.find(s => s.id === a.cameraHeight)?.name || '') : '—';
           const moveList = (a.movements || []).map(mv => MOVEMENTS.find(s => s.id === mv)?.name).filter(Boolean).join(', ') || '—';
+          const motionDirList = (a.motionDirs || []).map(md => MOTION_DIRS.find(s => s.id === md)?.name).filter(Boolean).join(', ') || '—';
           const elemLabel = ELEM_LABEL[tok.elementType] || 'Action';
           const isRevision = a.needsRevision;
           rows += `<tr id="row-${tok.id}" class="${isRevision ? 'revision-row' : ''}">
@@ -2739,8 +2848,10 @@
         <td><strong>${tok.text}</strong></td>
         <td>${shotName}</td>
         <td>${angleName}</td>
+        <td>${heightName}</td>
         <td>${moveList}</td>
         <td>${a.motion ? (a.motion.charAt(0).toUpperCase() + a.motion.slice(1)) : '—'}</td>
+        <td>${motionDirList}</td>
         <td>${a.notes || ''}</td>
       </tr>`;
         });
@@ -2749,7 +2860,7 @@
       <div class="scene-block">
         <div class="scene-heading">${sceneLabel}</div>
         <table>
-          <tr><th class="print-only cb-cell"></th><th class="no-print cb-cell">Revise</th><th>#</th><th>Line</th><th>Element</th><th>Word</th><th>Shot Type</th><th>Angle</th><th>Movement</th><th>Motion</th><th>Notes</th></tr>
+          <tr><th class="print-only cb-cell"></th><th class="no-print cb-cell">Revise</th><th>#</th><th>Line</th><th>Element</th><th>Word</th><th>Shot Type</th><th>Angle</th><th>Height</th><th>Movement</th><th>Motion</th><th>Direction</th><th>Notes</th></tr>
           ${rows}
         </table>
       </div>
@@ -2850,9 +2961,11 @@
           if (cb) cb.checked = false;
           row.cells[6].textContent = u.data.shotName;
           row.cells[7].textContent = u.data.angleName;
-          row.cells[8].textContent = u.data.moveList;
-          row.cells[9].textContent = u.data.motion;
-          row.cells[10].textContent = u.data.notes;
+          row.cells[8].textContent = u.data.heightName;
+          row.cells[9].textContent = u.data.moveList;
+          row.cells[10].textContent = u.data.motion;
+          row.cells[11].textContent = u.data.motionDirList;
+          row.cells[12].textContent = u.data.notes;
         } else {
           row.style.opacity = '0.35';
           row.style.textDecoration = 'line-through';
@@ -2956,11 +3069,13 @@
       const update = { tokenId: tokenId, data: null };
       if (a) {
         update.data = {
-          shotName:  a.shotType ? (SHOT_TYPES.find(s => s.id === a.shotType)?.name  || '') : '—',
-          angleName: a.angle    ? (ANGLES.find(s => s.id === a.angle)?.name          || '') : '—',
-          moveList:  (a.movements || []).map(mv => MOVEMENTS.find(s => s.id === mv)?.name).filter(Boolean).join(', ') || '—',
-          motion:    a.motion   ? (a.motion.charAt(0).toUpperCase() + a.motion.slice(1)) : '—',
-          notes:     a.notes    || ''
+          shotName:      a.shotType     ? (SHOT_TYPES.find(s => s.id === a.shotType)?.name      || '') : '—',
+          angleName:     a.angle        ? (ANGLES.find(s => s.id === a.angle)?.name              || '') : '—',
+          heightName:    a.cameraHeight ? (CAMERA_HEIGHTS.find(s => s.id === a.cameraHeight)?.name || '') : '—',
+          moveList:      (a.movements  || []).map(mv => MOVEMENTS.find(s => s.id === mv)?.name).filter(Boolean).join(', ') || '—',
+          motion:        a.motion       ? (a.motion.charAt(0).toUpperCase() + a.motion.slice(1)) : '—',
+          motionDirList: (a.motionDirs || []).map(md => MOTION_DIRS.find(s => s.id === md)?.name).filter(Boolean).join(', ') || '—',
+          notes:         a.notes        || ''
         };
       }
       window._reviewQueue.push(update);
