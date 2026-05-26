@@ -925,6 +925,9 @@
     // ─────────────────────────────────────────────────────────────────
 
     let tokens = [];      // { id, text, isWord, annotation, scene, isHeading, lineNumber, elementType }
+    let tokenMap = new Map();  // id → token  (O(1) lookup)
+    let spanMap = new Map();   // id → span element (targeted DOM updates)
+    let wordTokens = [];       // tokens where isWord === true  (cached for modal context)
     let activeId = null;  // word ID currently being edited
     let draft = {};       // temporary annotation being built in modal
 
@@ -973,10 +976,13 @@
         const isFDX = ext === 'fdx' || trimmed.startsWith('<FinalDraft') || (trimmed.startsWith('<?xml') && trimmed.includes('FinalDraft'));
         const parsedLines = isFDX ? parseFDXToLines(text) : parsePlainTextToLines(text);
         tokens = buildTokens(parsedLines);
+        tokenMap = new Map(tokens.map(t => [t.id, t]));
+        wordTokens = tokens.filter(t => t.isWord);
         document.getElementById('upload-screen').style.display = 'none';
         document.getElementById('app').style.display = 'block';
         document.getElementById('new-script-btn').style.display = 'block';
         document.getElementById('export-header-btn').style.display = 'block';
+        buildGrids();
         renderScript();
         renderShotList();
         updateStats();
@@ -1178,11 +1184,15 @@
     function renderScript() {
       const container = document.getElementById('script-content');
       container.innerHTML = '';
-      const annotated = tokens.filter(t => t.isWord && t.annotation);
+      spanMap.clear();
 
+      // Build shot-number map once — O(n) instead of O(n²)
+      const annotated = tokens.filter(t => t.isWord && t.annotation);
+      const shotNumMap = new Map(annotated.map((t, i) => [t.id, i + 1]));
+
+      const frag = document.createDocumentFragment();
       tokens.forEach(tok => {
         if (tok.isWord) {
-          const shotNum = annotated.findIndex(t => t.id === tok.id);
           const span = document.createElement('span');
           span.className = 'word-token'
             + (tok.annotation ? ' annotated' : '')
@@ -1193,18 +1203,51 @@
           if (tok.annotation) {
             const badge = document.createElement('sup');
             badge.className = 'shot-badge';
-            badge.textContent = shotNum + 1;
+            badge.textContent = shotNumMap.get(tok.id);
             span.appendChild(badge);
           }
           span.addEventListener('click', () => openModal(tok.id));
-          container.appendChild(span);
+          spanMap.set(tok.id, span);
+          frag.appendChild(span);
         } else {
           if (tok.text.includes('\n')) {
             const n = (tok.text.match(/\n/g) || []).length;
-            for (let i = 0; i < n; i++) container.appendChild(document.createElement('br'));
+            for (let i = 0; i < n; i++) frag.appendChild(document.createElement('br'));
           } else {
-            container.appendChild(document.createTextNode(tok.text));
+            frag.appendChild(document.createTextNode(tok.text));
           }
+        }
+      });
+      container.appendChild(frag);
+    }
+
+    // Updates annotation classes/badges without rebuilding DOM nodes
+    function refreshAnnotationDisplay() {
+      const annotated = tokens.filter(t => t.isWord && t.annotation);
+      const shotNumMap = new Map(annotated.map((t, i) => [t.id, i + 1]));
+
+      wordTokens.forEach(tok => {
+        const span = spanMap.get(tok.id);
+        if (!span) return;
+        const shotNum = shotNumMap.get(tok.id);
+        const isAnnotated = shotNum !== undefined;
+
+        const newClass = 'word-token'
+          + (isAnnotated ? ' annotated' : '')
+          + (tok.isHeading ? ' is-heading' : '')
+          + (tok.elementType && !tok.isHeading ? ' elem-' + tok.elementType : '');
+        if (span.className !== newClass) span.className = newClass;
+
+        let badge = span.querySelector('.shot-badge');
+        if (isAnnotated) {
+          if (!badge) {
+            badge = document.createElement('sup');
+            badge.className = 'shot-badge';
+            span.appendChild(badge);
+          }
+          if (badge.textContent !== String(shotNum)) badge.textContent = shotNum;
+        } else if (badge) {
+          badge.remove();
         }
       });
     }
@@ -1256,9 +1299,6 @@
         mg.appendChild(btn);
       });
 
-      // Motion
-      document.getElementById('motion-static').addEventListener('click', () => toggleMotion('static'));
-      document.getElementById('motion-moving').addEventListener('click', () => toggleMotion('moving'));
     }
 
     function toggleMotion(val) {
@@ -1281,16 +1321,15 @@
 
     function openModal(wordId) {
       activeId = wordId;
-      const tok = tokens.find(t => t.id === wordId);
+      const tok = tokenMap.get(wordId);
       draft = tok.annotation ? JSON.parse(JSON.stringify(tok.annotation)) : { shotType: null, angle: null, movements: [], motion: null, notes: '' };
 
       // Label
       document.getElementById('modal-word-label').textContent = `"${tok.text}"`;
 
-      // Context (±6 word-tokens)
-      const words = tokens.filter(t => t.isWord);
-      const wi = words.findIndex(t => t.id === wordId);
-      const slice = words.slice(Math.max(0, wi - 6), Math.min(words.length, wi + 7));
+      // Context (±6 word-tokens) — use cached wordTokens array
+      const wi = wordTokens.findIndex(t => t.id === wordId);
+      const slice = wordTokens.slice(Math.max(0, wi - 6), Math.min(wordTokens.length, wi + 7));
       const ctxHtml = slice.map(t =>
         t.id === wordId ? `<span class="hl">${t.text}</span>` : t.text
       ).join(' ');
@@ -1302,10 +1341,14 @@
     <span style="font-size:10px;color:var(--text-dim);margin-left:8px">Line ${tok.lineNumber}</span>
     <span style="font-size:10px;color:var(--accent);margin-left:10px;font-family:'Courier New',monospace;font-weight:700">${sceneStr}</span>
   </span>`;
-      document.getElementById('context-box').innerHTML = metaRow + (wi > 6 ? '…' : '') + ctxHtml + (wi < words.length - 7 ? '…' : '');
+      document.getElementById('context-box').innerHTML = metaRow + (wi > 6 ? '…' : '') + ctxHtml + (wi < wordTokens.length - 7 ? '…' : '');
 
-      // Build & restore grids
-      buildGrids();
+      // Reset grid selections without rebuilding DOM
+      document.querySelectorAll('#shot-type-grid .opt-btn').forEach(b => b.classList.remove('sel-shot'));
+      document.querySelectorAll('#angle-grid .opt-btn').forEach(b => b.classList.remove('sel-angle'));
+      document.querySelectorAll('#movement-grid .opt-btn').forEach(b => b.classList.remove('sel-move'));
+      document.getElementById('motion-static').classList.remove('sel-static');
+      document.getElementById('motion-moving').classList.remove('sel-moving');
 
       if (draft.shotType) {
         const b = document.querySelector(`#shot-type-grid [data-id="${draft.shotType}"]`);
@@ -1338,19 +1381,18 @@
       if (activeId === null) return;
       draft.notes = document.getElementById('shot-notes').value.trim();
       const hasAny = draft.shotType || draft.angle || (draft.movements && draft.movements.length) || draft.motion || draft.notes;
-      const tok = tokens.find(t => t.id === activeId);
-      tok.annotation = hasAny ? { ...draft } : null;
+      tokenMap.get(activeId).annotation = hasAny ? { ...draft } : null;
       closeModal();
-      renderScript();
+      refreshAnnotationDisplay();
       renderShotList();
       updateStats();
     }
 
     function removeShot() {
       if (activeId === null) return;
-      tokens.find(t => t.id === activeId).annotation = null;
+      tokenMap.get(activeId).annotation = null;
       closeModal();
-      renderScript();
+      refreshAnnotationDisplay();
       renderShotList();
       updateStats();
     }
@@ -1428,11 +1470,16 @@
     // ─────────────────────────────────────────────────────────────────
 
     function updateStats() {
-      const total = tokens.filter(t => t.isWord).length;
-      const tagged = tokens.filter(t => t.isWord && t.annotation).length;
-      const sceneCount = new Set(tokens.filter(t => t.scene).map(t => t.scene.number)).size;
+      let total = 0, tagged = 0;
+      const sceneSet = new Set();
+      for (const t of tokens) {
+        if (!t.isWord) continue;
+        total++;
+        if (t.annotation) tagged++;
+        if (t.scene) sceneSet.add(t.scene.number);
+      }
       document.getElementById('stat-words').textContent = total.toLocaleString();
-      document.getElementById('stat-scenes').textContent = sceneCount;
+      document.getElementById('stat-scenes').textContent = sceneSet.size;
       document.getElementById('stat-shots').textContent = tagged.toLocaleString();
       document.getElementById('stat-pct').textContent = total ? Math.round(tagged / total * 100) + '%' : '0%';
     }
@@ -1588,6 +1635,9 @@
     // ─────────────────────────────────────────────────────────────────
     // KEYBOARD
     // ─────────────────────────────────────────────────────────────────
+
+    document.getElementById('motion-static').addEventListener('click', () => toggleMotion('static'));
+    document.getElementById('motion-moving').addEventListener('click', () => toggleMotion('moving'));
 
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') closeModal();
