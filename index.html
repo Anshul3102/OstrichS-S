@@ -1477,12 +1477,35 @@
     function switchToShots() {
       const text = serializeEditorToText();
       if (!text.trim()) { alert('Script is empty — write something first.'); return; }
+      // Snapshot annotations before loadScript rebuilds tokens (which would wipe them)
+      const savedAnnotationsJson = localStorage.getItem('sts_annotations');
       currentMode = 'shots';
       localStorage.setItem('sts_mode', 'shots');
       document.getElementById('write-screen').style.display = 'none';
       document.getElementById('btn-shots-mode').classList.add('active');
       document.getElementById('btn-write-mode').classList.remove('active');
-      loadScript(text, currentFilename || 'Written Script', false);
+      // skipPersist=true prevents loadScript from overwriting saved annotations
+      loadScript(text, currentFilename || 'Written Script', true);
+      persistScript();
+      // Re-apply saved annotations to the freshly built tokens
+      if (savedAnnotationsJson) {
+        try {
+          const annotations = JSON.parse(savedAnnotationsJson);
+          let restored = 0;
+          tokens.forEach(t => {
+            if (t.isWord && annotations[t.id] != null) {
+              t.annotation = annotations[t.id];
+              restored++;
+            }
+          });
+          if (restored > 0) {
+            refreshAnnotationDisplay();
+            renderShotList();
+            updateStats();
+          }
+        } catch(e) {}
+      }
+      persistAnnotations();
     }
 
     function startWriteMode() {
@@ -1658,6 +1681,7 @@
         saveEditorElements();
         localStorage.setItem('sts_script', text);
         localStorage.setItem('sts_filename', currentFilename);
+        localStorage.removeItem('sts_annotations'); // fresh script — clear any stale annotations
         switchToWrite();
       } catch (err) {
         alert('Error loading script: ' + err.message);
