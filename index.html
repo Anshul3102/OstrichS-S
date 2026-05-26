@@ -1741,6 +1741,73 @@
     }
 
     function detectLineTypes(lines) {
+      // First pass: measure indentation to choose detection strategy
+      let maxIndent = 0;
+      let indentedCount = 0;
+      for (let i = 0; i < lines.length; i++) {
+        const raw = lines[i];
+        if (!raw.trim()) continue;
+        const ind = raw.length - raw.trimStart().length;
+        if (ind >= 8) indentedCount++;
+        if (ind > maxIndent) maxIndent = ind;
+      }
+      // If the file has clear indentation zones (like a proper .txt screenplay export)
+      // use indent-based classification — much more reliable than state machine for these files
+      if (maxIndent >= 14 && indentedCount >= 3) {
+        return detectLineTypesIndented(lines);
+      }
+      return detectLineTypesHeuristic(lines);
+    }
+
+    // Indent-aware path: for properly formatted screenplay .txt exports
+    // Indent zones: 0 = scene/action/transition, 6-17 = dialogue/parenthetical, 18+ = character
+    function detectLineTypesIndented(lines) {
+      const types = [];
+      for (let i = 0; i < lines.length; i++) {
+        const raw = lines[i];
+        const trimmed = raw.trim();
+
+        if (!trimmed) { types.push('EMPTY'); continue; }
+
+        // Standalone page numbers or separator lines (e.g. "--- 2. ---")
+        if (/^\d+\.?\s*$/.test(trimmed)) { types.push('EMPTY'); continue; }
+        if (/^[-=*]{4,}/.test(trimmed)) { types.push('EMPTY'); continue; }
+
+        // Scene heading — always at low indent, starts with INT./EXT./etc.
+        if (/^(INT\.|EXT\.|INT\/EXT\.|I\/E\.)/i.test(trimmed)) {
+          types.push('SCENE_HEADING'); continue;
+        }
+
+        // Transition
+        if (/\bTO:$/.test(trimmed) || /^(FADE IN:|FADE OUT\.|SMASH CUT TO:|TITLE CARD:)/i.test(trimmed)) {
+          types.push('TRANSITION'); continue;
+        }
+
+        const indent = raw.length - raw.trimStart().length;
+
+        if (indent >= 18) {
+          // High indent: character name (if all-caps) or continuation dialogue
+          const stripped = trimmed.replace(/\s*\([^)]*\)\s*/g, '').trim();
+          const letters = stripped.replace(/[^a-zA-Z]/g, '');
+          const isAllCaps = letters.length > 0 && stripped === stripped.toUpperCase();
+          types.push(isAllCaps ? 'CHARACTER' : 'DIALOGUE');
+          continue;
+        }
+
+        if (indent >= 6) {
+          // Medium indent: parenthetical or dialogue
+          types.push(trimmed.startsWith('(') ? 'PARENTHETICAL' : 'DIALOGUE');
+          continue;
+        }
+
+        // Zero/low indent: action line
+        types.push('ACTION');
+      }
+      return types;
+    }
+
+    // Heuristic path: for plain-text scripts without meaningful indentation
+    function detectLineTypesHeuristic(lines) {
       const types = [];
       let afterChar = false;
       let blanksAfterChar = 0;
@@ -1752,16 +1819,14 @@
           types.push('EMPTY');
           if (afterChar) {
             blanksAfterChar++;
-            // Two+ consecutive blanks always end a dialogue block
             if (blanksAfterChar >= 2) {
               afterChar = false;
               blanksAfterChar = 0;
             } else {
-              // One blank: peek at next non-empty line to decide
+              // One blank: peek ahead — only reset if next real line is scene/transition
               for (let j = i + 1; j < lines.length; j++) {
                 const nt = lines[j].trim();
                 if (!nt) continue;
-                // Scene heading or transition clearly ends the dialogue block
                 if (/^(INT\.|EXT\.|INT\/EXT\.|I\/E\.)/i.test(nt) || /\bTO:$/.test(nt) ||
                     /^(FADE IN:|FADE OUT\.|SMASH CUT TO:|TITLE CARD:)/i.test(nt)) {
                   afterChar = false;
@@ -1776,64 +1841,44 @@
 
         blanksAfterChar = 0;
 
-        // Page numbers — standalone digits (e.g. "42" or "42.") from PDF/Word exports
-        if (/^\d+\.?\s*$/.test(trimmed)) {
-          types.push('EMPTY');
-          continue;
-        }
+        if (/^\d+\.?\s*$/.test(trimmed)) { types.push('EMPTY'); continue; }
 
-        // Scene heading
         if (/^(INT\.|EXT\.|INT\/EXT\.|I\/E\.)/i.test(trimmed)) {
-          types.push('SCENE_HEADING');
-          afterChar = false;
-          continue;
+          types.push('SCENE_HEADING'); afterChar = false; continue;
         }
 
-        // Transition
         if (/\bTO:$/.test(trimmed) || /^(FADE IN:|FADE OUT\.|SMASH CUT TO:|TITLE CARD:)/i.test(trimmed)) {
-          types.push('TRANSITION');
-          afterChar = false;
-          continue;
+          types.push('TRANSITION'); afterChar = false; continue;
         }
 
-        // Parenthetical after character
-        if (afterChar && trimmed.startsWith('(')) {
-          types.push('PARENTHETICAL');
-          continue;
-        }
+        if (afterChar && trimmed.startsWith('(')) { types.push('PARENTHETICAL'); continue; }
 
-        // Dialogue (we're after a character or parenthetical)
-        if (afterChar) {
-          types.push('DIALOGUE');
-          continue;
-        }
-
-        // Is the line effectively ALL CAPS?
+        // Check for a new character name even while in afterChar mode —
+        // prevents misclassifying the next speaker's cue as dialogue
         const stripped = trimmed.replace(/\s*\([^)]*\)\s*/g, '').trim();
         const letters = stripped.replace(/[^a-zA-Z]/g, '');
         const isAllCaps = letters.length > 0 && stripped === stripped.toUpperCase();
 
         if (isAllCaps) {
-          // Look ahead: skip blanks to find next actual content
           let hasDialogueNext = false;
           for (let j = i + 1; j < lines.length; j++) {
             const nextT = lines[j].trim();
-            if (!nextT) continue; // skip blanks between character name and dialogue
-            const nextStripped = nextT.replace(/\s*\([^)]*\)\s*/g, '').trim();
-            const nextLetters = nextStripped.replace(/[^a-zA-Z]/g, '');
-            const nextAllCaps = nextLetters.length > 0 && nextStripped === nextStripped.toUpperCase();
-            if (!nextAllCaps || nextT.startsWith('(')) hasDialogueNext = true;
+            if (!nextT) continue;
+            const ns = nextT.replace(/\s*\([^)]*\)\s*/g, '').trim();
+            const nl = ns.replace(/[^a-zA-Z]/g, '');
+            const nac = nl.length > 0 && ns === ns.toUpperCase();
+            if (!nac || nextT.startsWith('(')) hasDialogueNext = true;
             break;
           }
           if (hasDialogueNext) {
-            types.push('CHARACTER');
-            afterChar = true;
+            types.push('CHARACTER'); afterChar = true;
           } else {
-            types.push('SUBHEADER');
-            afterChar = false;
+            types.push('SUBHEADER'); afterChar = false;
           }
           continue;
         }
+
+        if (afterChar) { types.push('DIALOGUE'); continue; }
 
         types.push('ACTION');
         afterChar = false;
