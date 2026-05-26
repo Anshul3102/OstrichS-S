@@ -1717,9 +1717,11 @@
         window.opener.toggleRevision(tokenId, checked);
       }
     }
-    window.syncShot = function(tokenId, data) {
-      var row = document.getElementById('row-' + tokenId);
+    window.addEventListener('message', function(e) {
+      if (!e.data || e.data.type !== 'sts_sync') return;
+      var row = document.getElementById('row-' + e.data.tokenId);
       if (!row) return;
+      var data = e.data.data;
       if (data) {
         row.classList.remove('revision-row');
         var cb = row.querySelector('input[type=checkbox]');
@@ -1735,7 +1737,7 @@
         var cb2 = row.querySelector('input[type=checkbox]');
         if (cb2) cb2.disabled = true;
       }
-    };
+    });
   <\/script>
   </body></html>`);
       win.document.close();
@@ -1811,20 +1813,19 @@
 
     function syncReviewTab(tokenId) {
       if (!reviewWindow || reviewWindow.closed) return;
-      if (typeof reviewWindow.syncShot !== 'function') return;
       const tok = tokenMap.get(tokenId);
       const a = tok ? tok.annotation : null;
+      const msg = { type: 'sts_sync', tokenId: tokenId, data: null };
       if (a) {
-        reviewWindow.syncShot(tokenId, {
-          shotName:  a.shotType   ? (SHOT_TYPES.find(s => s.id === a.shotType)?.name  || '') : '—',
-          angleName: a.angle      ? (ANGLES.find(s => s.id === a.angle)?.name          || '') : '—',
+        msg.data = {
+          shotName:  a.shotType ? (SHOT_TYPES.find(s => s.id === a.shotType)?.name  || '') : '—',
+          angleName: a.angle    ? (ANGLES.find(s => s.id === a.angle)?.name          || '') : '—',
           moveList:  (a.movements || []).map(mv => MOVEMENTS.find(s => s.id === mv)?.name).filter(Boolean).join(', ') || '—',
-          motion:    a.motion     ? (a.motion.charAt(0).toUpperCase() + a.motion.slice(1)) : '—',
-          notes:     a.notes      || ''
-        });
-      } else {
-        reviewWindow.syncShot(tokenId, null);
+          motion:    a.motion   ? (a.motion.charAt(0).toUpperCase() + a.motion.slice(1)) : '—',
+          notes:     a.notes    || ''
+        };
       }
+      reviewWindow.postMessage(msg, '*');
     }
 
     document.getElementById('motion-static').addEventListener('click', () => toggleMotion('static'));
