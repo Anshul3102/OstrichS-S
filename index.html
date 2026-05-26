@@ -1717,27 +1717,31 @@
         window.opener.toggleRevision(tokenId, checked);
       }
     }
-    window.addEventListener('message', function(e) {
-      if (!e.data || e.data.type !== 'sts_sync') return;
-      var row = document.getElementById('row-' + e.data.tokenId);
-      if (!row) return;
-      var data = e.data.data;
-      if (data) {
-        row.classList.remove('revision-row');
-        var cb = row.querySelector('input[type=checkbox]');
-        if (cb) cb.checked = false;
-        row.cells[5].textContent = data.shotName;
-        row.cells[6].textContent = data.angleName;
-        row.cells[7].textContent = data.moveList;
-        row.cells[8].textContent = data.motion;
-        row.cells[9].textContent = data.notes;
-      } else {
-        row.style.opacity = '0.35';
-        row.style.textDecoration = 'line-through';
-        var cb2 = row.querySelector('input[type=checkbox]');
-        if (cb2) cb2.disabled = true;
-      }
-    });
+    setInterval(function() {
+      if (!window.opener || window.opener.closed) return;
+      var queue = window.opener._reviewQueue;
+      if (!queue || !queue.length) return;
+      window.opener._reviewQueue = [];
+      queue.forEach(function(u) {
+        var row = document.getElementById('row-' + u.tokenId);
+        if (!row) return;
+        if (u.data) {
+          row.classList.remove('revision-row');
+          var cb = row.querySelector('input[type=checkbox]');
+          if (cb) cb.checked = false;
+          row.cells[5].textContent = u.data.shotName;
+          row.cells[6].textContent = u.data.angleName;
+          row.cells[7].textContent = u.data.moveList;
+          row.cells[8].textContent = u.data.motion;
+          row.cells[9].textContent = u.data.notes;
+        } else {
+          row.style.opacity = '0.35';
+          row.style.textDecoration = 'line-through';
+          var cb2 = row.querySelector('input[type=checkbox]');
+          if (cb2) cb2.disabled = true;
+        }
+      });
+    }, 500);
   <\/script>
   </body></html>`);
       win.document.close();
@@ -1811,13 +1815,15 @@
     // REVIEW TAB SYNC
     // ─────────────────────────────────────────────────────────────────
 
+    window._reviewQueue = [];  // review tab polls this for updates
+
     function syncReviewTab(tokenId) {
       if (!reviewWindow || reviewWindow.closed) return;
       const tok = tokenMap.get(tokenId);
       const a = tok ? tok.annotation : null;
-      const msg = { type: 'sts_sync', tokenId: tokenId, data: null };
+      const update = { tokenId: tokenId, data: null };
       if (a) {
-        msg.data = {
+        update.data = {
           shotName:  a.shotType ? (SHOT_TYPES.find(s => s.id === a.shotType)?.name  || '') : '—',
           angleName: a.angle    ? (ANGLES.find(s => s.id === a.angle)?.name          || '') : '—',
           moveList:  (a.movements || []).map(mv => MOVEMENTS.find(s => s.id === mv)?.name).filter(Boolean).join(', ') || '—',
@@ -1825,7 +1831,7 @@
           notes:     a.notes    || ''
         };
       }
-      reviewWindow.postMessage(msg, '*');
+      window._reviewQueue.push(update);
     }
 
     document.getElementById('motion-static').addEventListener('click', () => toggleMotion('static'));
