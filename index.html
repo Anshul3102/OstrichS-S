@@ -289,10 +289,58 @@
     .script-content {
       max-width: 700px;
       margin: 0 auto;
-      line-height: 2.1;
-      font-size: 16px;
-      white-space: pre-wrap;
+      line-height: 1.65;
+      font-size: 15px;
       font-family: 'Courier New', Courier, monospace;
+    }
+
+    /* ── Per-line screenplay formatting in shots mode ── */
+    .shots-line { display: block; }
+    .shots-line.l-EMPTY { min-height: 0.85em; }
+
+    .shots-line.l-SCENE_HEADING {
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #ffffff;
+      margin-top: 1.6em;
+      margin-bottom: 0.2em;
+      letter-spacing: 0.8px;
+    }
+
+    .shots-line.l-ACTION { margin-top: 0.1em; }
+
+    .shots-line.l-CHARACTER {
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--accent);
+      padding-left: 210px;
+      margin-top: 1em;
+      letter-spacing: 0.4px;
+    }
+
+    .shots-line.l-DIALOGUE {
+      padding-left: 105px;
+      padding-right: 80px;
+    }
+
+    .shots-line.l-PARENTHETICAL {
+      padding-left: 140px;
+      padding-right: 110px;
+      color: var(--text-dim);
+      font-style: italic;
+    }
+
+    .shots-line.l-TRANSITION {
+      text-transform: uppercase;
+      text-align: right;
+      color: var(--text-dim);
+      margin-top: 1em;
+    }
+
+    .shots-line.l-SUBHEADER {
+      font-weight: 700;
+      margin-top: 0.8em;
+      letter-spacing: 0.3px;
     }
 
     .word-token {
@@ -2374,29 +2422,41 @@
       const annotated = tokens.filter(t => t.isWord && t.annotation);
       const shotNumMap = new Map(annotated.map((t, i) => [t.id, i + 1]));
 
-      // Build HTML as a string — browser's C++ parser is 3-5× faster than
-      // creating 32K+ DOM nodes one-by-one from JS for large scripts
-      let html = '';
+      // Group tokens by lineNumber, wrap each line in a typed div for screenplay indentation
+      const lineNums = [];
+      const lineMap = new Map();
       tokens.forEach(tok => {
-        if (tok.isWord) {
-          const needsRevision = tok.annotation && tok.annotation.needsRevision;
-          const cls = 'word-token'
-            + (tok.annotation ? ' annotated' : '')
-            + (needsRevision ? ' needs-revision' : '')
-            + (tok.isHeading ? ' is-heading' : '')
-            + (tok.elementType && !tok.isHeading ? ' elem-' + tok.elementType : '');
-          const shotNum = shotNumMap.get(tok.id);
-          const badge = shotNum !== undefined
-            ? '<sup class="shot-badge' + (needsRevision ? ' revision' : '') + '">' + shotNum + '</sup>'
-            : '';
-          html += '<span class="' + cls + '" data-id="' + tok.id + '">' + _htEsc(tok.text) + badge + '</span>';
-        } else {
-          if (tok.text.includes('\n')) {
-            html += '<br>'.repeat((tok.text.match(/\n/g) || []).length);
-          } else {
+        const ln = tok.lineNumber;
+        if (!lineMap.has(ln)) {
+          lineMap.set(ln, { etype: tok.elementType || 'ACTION', toks: [] });
+          lineNums.push(ln);
+        }
+        lineMap.get(ln).toks.push(tok);
+      });
+
+      let html = '';
+      lineNums.forEach(ln => {
+        const { etype, toks } = lineMap.get(ln);
+        html += '<div class="shots-line l-' + etype + '">';
+        toks.forEach(tok => {
+          if (tok.isWord) {
+            const needsRevision = tok.annotation && tok.annotation.needsRevision;
+            const cls = 'word-token'
+              + (tok.annotation ? ' annotated' : '')
+              + (needsRevision ? ' needs-revision' : '')
+              + (tok.isHeading ? ' is-heading' : '')
+              + (tok.elementType && !tok.isHeading ? ' elem-' + tok.elementType : '');
+            const shotNum = shotNumMap.get(tok.id);
+            const badge = shotNum !== undefined
+              ? '<sup class="shot-badge' + (needsRevision ? ' revision' : '') + '">' + shotNum + '</sup>'
+              : '';
+            html += '<span class="' + cls + '" data-id="' + tok.id + '">' + _htEsc(tok.text) + badge + '</span>';
+          } else if (!tok.text.includes('\n')) {
             html += _htEsc(tok.text);
           }
-        }
+          // \n tokens skipped — div structure provides line breaks
+        });
+        html += '</div>';
       });
 
       container.innerHTML = html;
