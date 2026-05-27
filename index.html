@@ -1641,6 +1641,24 @@
       }).join('\n');
     }
 
+    // Returns typed lines directly from editor data-type — bypasses heuristic detection
+    function serializeEditorToLines() {
+      const ETYPE = { scene: 'SCENE_HEADING', action: 'ACTION', character: 'CHARACTER',
+                      dialogue: 'DIALOGUE', parenthetical: 'PARENTHETICAL', transition: 'TRANSITION' };
+      const editor = document.getElementById('screenplay-editor');
+      return [...editor.querySelectorAll('.script-line')].map(line => {
+        const type = line.dataset.type;
+        let text = line.textContent;
+        if (type === 'scene' || type === 'character' || type === 'transition') text = text.toUpperCase();
+        if (type === 'parenthetical') {
+          text = text.trim();
+          if (text && !text.startsWith('(')) text = '(' + text;
+          if (text && !text.endsWith(')')) text = text + ')';
+        }
+        return { text, elementType: ETYPE[type] || 'ACTION' };
+      });
+    }
+
     // ── Mode switching ──
 
     function switchToWrite() {
@@ -1662,7 +1680,8 @@
     }
 
     function switchToShots() {
-      const text = serializeEditorToText();
+      const parsedLines = serializeEditorToLines();
+      const text = parsedLines.map(l => l.text).join('\n');
       if (!text.trim()) { alert('Script is empty — write something first.'); return; }
       // Snapshot annotations before loadScript rebuilds tokens (which would wipe them)
       const savedAnnotationsJson = localStorage.getItem('sts_annotations');
@@ -1672,7 +1691,8 @@
       document.getElementById('btn-shots-mode').classList.add('active');
       document.getElementById('btn-write-mode').classList.remove('active');
       // skipPersist=true prevents loadScript from overwriting saved annotations
-      loadScript(text, currentFilename || 'Written Script', true);
+      // preParsedLines bypasses heuristic detection — uses data-type from editor directly
+      loadScript(text, currentFilename || 'Written Script', true, parsedLines);
       persistScript();
       // Re-apply saved annotations to the freshly built tokens
       if (savedAnnotationsJson) {
@@ -2115,12 +2135,12 @@
       }
     }
 
-    function loadScript(text, filename, skipPersist) {
+    function loadScript(text, filename, skipPersist, preParsedLines) {
       try {
         const ext = (filename || '').split('.').pop().toLowerCase();
         const trimmed = text.trim();
         const isFDX = ext === 'fdx' || trimmed.startsWith('<FinalDraft') || (trimmed.startsWith('<?xml') && trimmed.includes('FinalDraft'));
-        const parsedLines = isFDX ? parseFDXToLines(text) : parsePlainTextToLines(text);
+        const parsedLines = preParsedLines || (isFDX ? parseFDXToLines(text) : parsePlainTextToLines(text));
         tokens = buildTokens(parsedLines);
         tokenMap = new Map(tokens.map(t => [t.id, t]));
         wordTokens = tokens.filter(t => t.isWord);
