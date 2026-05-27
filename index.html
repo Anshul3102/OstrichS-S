@@ -24,6 +24,10 @@
       --text-dim: #888888;
       --on-accent: #000000;
       --scene-heading-color: #ffffff;
+      --word-hover-bg: rgba(245,242,232,0.12);
+      --word-hover-outline: rgba(245,242,232,0.35);
+      --badge-neutral-bg: rgba(255,255,255,.08);
+      --subtle-hover: rgba(245,242,232,0.04);
       --annotated-bg: rgba(61, 214, 140, 0.15);
       --annotated-border: #3dd68c;
       --revision-bg: rgba(255, 60, 60, 0.15);
@@ -41,6 +45,10 @@
       --text-dim: #7a7572;
       --on-accent: #f5f2e8;
       --scene-heading-color: #1a1710;
+      --word-hover-bg: rgba(26,23,16,0.09);
+      --word-hover-outline: rgba(26,23,16,0.25);
+      --badge-neutral-bg: rgba(0,0,0,.07);
+      --subtle-hover: rgba(26,23,16,0.04);
       --annotated-bg: rgba(0, 150, 80, 0.12);
       --annotated-border: #00965a;
       --revision-bg: rgba(200, 30, 30, 0.10);
@@ -190,7 +198,7 @@
     }
 
     .landing-hero.drag-over {
-      background: rgba(245,242,232,0.03);
+      background: var(--subtle-hover);
       outline: 2px dashed var(--border);
       outline-offset: -2px;
     }
@@ -260,7 +268,7 @@
     .landing-card:hover {
       border-color: var(--accent);
       color: var(--accent);
-      background: rgba(245,242,232,0.04);
+      background: var(--subtle-hover);
       transform: translateY(-3px);
     }
 
@@ -385,8 +393,8 @@
     }
 
     .word-token:hover {
-      background: rgba(245, 242, 232, 0.12);
-      outline: 1px solid rgba(245, 242, 232, 0.35);
+      background: var(--word-hover-bg);
+      outline: 1px solid var(--word-hover-outline);
     }
 
     .word-token.annotated {
@@ -842,7 +850,7 @@
 
     /* ── Element type styling in script view ── */
     .word-token.is-heading {
-      color: #aaa;
+      color: var(--text-dim);
       font-family: 'Courier New', monospace;
       font-size: 14px;
       font-weight: 700;
@@ -850,8 +858,8 @@
     }
 
     .word-token.is-heading:hover {
-      background: rgba(255, 255, 255, 0.06);
-      outline-color: rgba(255, 255, 255, 0.15);
+      background: var(--word-hover-bg);
+      outline-color: var(--word-hover-outline);
     }
 
     .word-token.elem-CHARACTER {
@@ -870,7 +878,7 @@
 
     .word-token.elem-SUBHEADER {
       font-weight: 600;
-      color: #bbb;
+      color: var(--text-dim);
     }
 
     /* ── Element type badge in modal ── */
@@ -886,12 +894,12 @@
     }
 
     .elem-badge.b-ACTION {
-      background: rgba(100, 100, 120, .3);
-      color: #aaa;
+      background: var(--badge-neutral-bg);
+      color: var(--text-dim);
     }
 
     .elem-badge.b-CHARACTER {
-      background: rgba(245, 242, 232, .2);
+      background: var(--badge-neutral-bg);
       color: var(--accent);
     }
 
@@ -901,23 +909,23 @@
     }
 
     .elem-badge.b-PARENTHETICAL {
-      background: rgba(100, 100, 120, .2);
-      color: #888;
+      background: var(--badge-neutral-bg);
+      color: var(--text-dim);
     }
 
     .elem-badge.b-SCENE_HEADING {
-      background: rgba(255, 255, 255, .08);
-      color: #bbb;
+      background: var(--badge-neutral-bg);
+      color: var(--text-dim);
     }
 
     .elem-badge.b-SUBHEADER {
-      background: rgba(255, 255, 255, .08);
-      color: #bbb;
+      background: var(--badge-neutral-bg);
+      color: var(--text-dim);
     }
 
     .elem-badge.b-TRANSITION {
-      background: rgba(100, 100, 120, .2);
-      color: #888;
+      background: var(--badge-neutral-bg);
+      color: var(--text-dim);
     }
 
     /* ── Scene dividers in sidebar ── */
@@ -965,7 +973,7 @@
     }
 
     ::-webkit-scrollbar-thumb:hover {
-      background: #444;
+      background: var(--text-dim);
     }
 
     /* ── Mode Tabs ── */
@@ -991,7 +999,7 @@
       transition: all 0.15s;
     }
     .mode-tab:hover { color: var(--text); }
-    .mode-tab.active { background: var(--accent); color: #000; }
+    .mode-tab.active { background: var(--accent); color: var(--on-accent); }
 
 
     /* ── Write Screen ── */
@@ -1014,7 +1022,7 @@
       font-weight: 700;
       letter-spacing: 1.5px;
       text-transform: uppercase;
-      color: #000;
+      color: var(--on-accent);
       background: var(--accent);
       padding: 3px 10px;
       border-radius: 4px;
@@ -1063,7 +1071,7 @@
       position: relative;
     }
     .script-line:focus { border-left-color: var(--accent); }
-    .script-line.active-line { background: rgba(245,242,232,0.03); }
+    .script-line.active-line { background: var(--subtle-hover); }
 
     /* placeholder on empty lines */
     .script-line:empty::before {
