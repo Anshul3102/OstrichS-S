@@ -1194,14 +1194,14 @@
       <div class="landing-insta">@ostrich.cinemas</div>
       <div class="landing-divider"></div>
       <div class="landing-tagline">Turn your script into a shot list.</div>
-      <input type="file" id="file-input" accept=".txt,.fdx,.fountain,.pdf" style="display:none">
+      <input type="file" id="file-input" accept=".fdx" style="display:none">
       <div class="landing-actions">
         <button class="landing-card" id="upload-card-btn">
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
           </svg>
           <div class="landing-card-title">Upload Script</div>
-          <div class="landing-card-sub">.txt &middot; .pdf &middot; .fdx</div>
+          <div class="landing-card-sub">Final Draft .fdx</div>
         </button>
         <button class="landing-card" id="write-new-btn">
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
@@ -1266,7 +1266,7 @@
       <div class="dl-dropdown">
         <button class="btn btn-secondary" id="download-script-btn" style="font-size:12px;padding:5px 12px;">Download &#9662;</button>
         <div class="dl-menu" id="dl-menu">
-          <button class="dl-menu-item" id="dl-txt-btn">Text File (.txt)</button>
+          <button class="dl-menu-item" id="dl-fdx-btn">Final Draft (.fdx)</button>
           <button class="dl-menu-item" id="dl-pdf-btn">PDF (.pdf)</button>
         </div>
       </div>
@@ -1808,6 +1808,31 @@
       URL.revokeObjectURL(a.href);
     }
 
+    function downloadScriptAsFdx() {
+      var FDX_TYPE = { scene: 'Scene Heading', action: 'Action', character: 'Character',
+                       dialogue: 'Dialogue', parenthetical: 'Parenthetical', transition: 'Transition' };
+      function xmlEsc(s) {
+        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+      var elements = buildScriptElements();
+      var paras = elements.map(function(el) {
+        var type = FDX_TYPE[el.type] || 'Action';
+        return '  <Paragraph Type="' + type + '"><Text>' + xmlEsc(el.text) + '</Text></Paragraph>';
+      }).join('\n');
+      var xml = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n'
+              + '<FinalDraft DocumentType="Script" Template="No" Version="1">\n'
+              + '<Content>\n'
+              + paras + '\n'
+              + '</Content>\n'
+              + '</FinalDraft>';
+      var blob = new Blob([xml], { type: 'application/xml' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = getScriptBasename() + '.fdx';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
     function downloadScriptAsPdf() {
       var elements = buildScriptElements();
       var title = getScriptBasename();
@@ -1930,9 +1955,9 @@
         menu.classList.toggle("open");
       });
       document.addEventListener("click", function() { menu.classList.remove("open"); });
-      document.getElementById("dl-txt-btn").addEventListener("click", function() {
+      document.getElementById("dl-fdx-btn").addEventListener("click", function() {
         menu.classList.remove("open");
-        downloadScriptAsTxt();
+        downloadScriptAsFdx();
       });
       document.getElementById("dl-pdf-btn").addEventListener("click", function() {
         menu.classList.remove("open");
@@ -1979,118 +2004,15 @@
     });
 
     function readAndHandleFile(f) {
-      var ext = f.name.split('.').pop().toLowerCase();
-      if (ext === 'pdf' || f.type === 'application/pdf') {
-        var r = new FileReader();
-        r.onload = function(ev) { handlePDFUpload(ev.target.result, f.name); };
-        r.readAsArrayBuffer(f);
-      } else {
-        var r = new FileReader();
-        r.onload = function(ev) { handleUploadedScript(ev.target.result, f.name); };
-        r.readAsText(f);
-      }
+      var r = new FileReader();
+      r.onload = function(ev) { handleUploadedScript(ev.target.result, f.name); };
+      r.readAsText(f);
     }
 
     document.getElementById('upload-card-btn').addEventListener('click', function() {
       fileInput.click();
     });
 
-    // ── PDF support via PDF.js (loaded lazily from CDN on first use) ──
-
-    function loadPdfJs() {
-      return new Promise(function(resolve, reject) {
-        if (window.pdfjsLib) { resolve(); return; }
-        var script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-        script.onload = function() {
-          pdfjsLib.GlobalWorkerOptions.workerSrc =
-            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-          resolve();
-        };
-        script.onerror = function() {
-          reject(new Error('Could not load the PDF library. An internet connection is required the first time a PDF is opened.'));
-        };
-        document.head.appendChild(script);
-      });
-    }
-
-    async function handlePDFUpload(arrayBuffer, filename) {
-      var btn = document.getElementById('upload-card-btn');
-      var origLabel = btn ? btn.querySelector('.landing-card-title').textContent : '';
-      if (btn) btn.querySelector('.landing-card-title').textContent = 'Reading PDF…';
-
-      try {
-        await loadPdfJs();
-
-        var pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        var allLines = [];     // { x, text }
-        var widthSum = 0, charSum = 0;
-
-        for (var p = 1; p <= pdf.numPages; p++) {
-          var page = await pdf.getPage(p);
-          var viewport = page.getViewport({ scale: 1.0 });
-          var tc = await page.getTextContent();
-
-          // Group text items by approximate y-position (same line = within 5pt)
-          var yMap = new Map();
-          tc.items.forEach(function(item) {
-            if (typeof item.str === 'undefined') return; // skip marked-content markers
-            var x = item.transform[4];
-            var y = viewport.height - item.transform[5]; // flip: top = 0
-            var yKey = Math.round(y / 5) * 5;
-            if (!yMap.has(yKey)) yMap.set(yKey, []);
-            yMap.get(yKey).push({ x: x, str: item.str });
-            // Accumulate for char-width estimation
-            if (item.str.trim() && item.width > 0) {
-              widthSum += item.width;
-              charSum += item.str.length;
-            }
-          });
-
-          // Sort lines top-to-bottom, items left-to-right within each line
-          var pageLines = [...yMap.entries()]
-            .sort(function(a, b) { return a[0] - b[0]; })
-            .map(function(entry) {
-              var items = entry[1].sort(function(a, b) { return a.x - b.x; });
-              return { x: items[0].x, text: items.map(function(i) { return i.str; }).join('') };
-            });
-
-          allLines = allLines.concat(pageLines);
-          allLines.push({ x: 0, text: '' }); // blank between pages
-        }
-
-        // Validate text was found
-        var nonEmpty = allLines.filter(function(l) { return l.text.trim(); });
-        if (!nonEmpty.length) {
-          throw new Error('No text could be extracted from this PDF.\nIt may be a scanned image — please export as .txt from your screenwriting app instead.');
-        }
-
-        // Left margin = minimum x across all content lines
-        var minX = nonEmpty.reduce(function(m, l) { return Math.min(m, l.x); }, Infinity);
-
-        // Character width: derived from PDF font metrics when available, otherwise 7.2pt (Courier 12pt)
-        var charWidth = charSum > 20 ? widthSum / charSum : 7.2;
-
-        // Reconstruct indented text — x-offset → leading spaces
-        // This maps screenplay columns (action=0, dialogue=~10, character=~22) that
-        // detectLineTypesIndented understands
-        var textLines = allLines.map(function(l) {
-          if (!l.text.trim()) return '';
-          var indent = Math.max(0, Math.round((l.x - minX) / charWidth));
-          return ' '.repeat(indent) + l.text;
-        });
-
-        var extractedText = textLines.join('\n');
-        var baseName = filename.replace(/\.pdf$/i, '');
-        handleUploadedScript(extractedText, baseName + '.txt');
-
-      } catch (err) {
-        alert('Error reading PDF: ' + err.message);
-        console.error(err);
-      } finally {
-        if (btn) btn.querySelector('.landing-card-title').textContent = origLabel;
-      }
-    }
 
     function handleUploadedScript(text, filename) {
       try {
