@@ -2261,7 +2261,6 @@
     function detectLineTypesHeuristic(lines) {
       const types = [];
       let afterChar = false;
-      let blanksAfterChar = 0;
 
       for (let i = 0; i < lines.length; i++) {
         const trimmed = lines[i].trim();
@@ -2269,28 +2268,11 @@
         if (!trimmed) {
           types.push('EMPTY');
           if (afterChar) {
-            blanksAfterChar++;
-            if (blanksAfterChar >= 2) {
-              afterChar = false;
-              blanksAfterChar = 0;
-            } else {
-              // One blank: peek ahead — only reset if next real line is scene/transition
-              for (let j = i + 1; j < lines.length; j++) {
-                const nt = lines[j].trim();
-                if (!nt) continue;
-                if (/^(INT\.|EXT\.|INT\/EXT\.|I\/E\.)/i.test(nt) || /\bTO:$/.test(nt) ||
-                    /^(FADE IN:|FADE OUT\.|SMASH CUT TO:|TITLE CARD:)/i.test(nt)) {
-                  afterChar = false;
-                  blanksAfterChar = 0;
-                }
-                break;
-              }
-            }
+            // Any blank line exits dialogue context — screenplay doesn't have blanks inside a dialogue block
+            afterChar = false;
           }
           continue;
         }
-
-        blanksAfterChar = 0;
 
         if (/^\d+\.?\s*$/.test(trimmed)) { types.push('EMPTY'); continue; }
 
