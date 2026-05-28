@@ -327,37 +327,36 @@
       height: calc(100vh - 53px);
     }
 
-    .app-layout {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-    }
-
-    #script-area {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    /* Write mode: show toolbar, hide stats; shots mode: vice versa */
-    #main-app.write-mode  #stats-bar    { display: none; }
-    #main-app.shots-mode  #write-toolbar { display: none; }
-    #main-app.write-mode  #editor-wrap  { display: flex; flex-direction: column; flex: 1; }
-    #main-app.shots-mode  #editor-wrap  { display: none; }
-    #main-app.write-mode  #script-panel { display: none; }
-    #main-app.shots-mode  #script-panel { display: flex; flex-direction: column; flex: 1; }
-
-    .stats-bar {
-      padding: 8px 28px;
+    /* Fixed-height toolbar row: both toolbars overlay each other, fade between them */
+    .toolbar-area {
+      height: 44px;
+      flex-shrink: 0;
+      position: relative;
       background: var(--surface);
       border-bottom: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    #write-toolbar, #stats-bar {
+      position: absolute;
+      inset: 0;
       display: flex;
+      align-items: center;
+      transition: opacity 0.32s ease;
+    }
+
+    /* Opacity-based show/hide for toolbars */
+    #main-app.write-mode  #write-toolbar { opacity: 1; pointer-events: auto; }
+    #main-app.write-mode  #stats-bar     { opacity: 0; pointer-events: none; }
+    #main-app.shots-mode  #write-toolbar { opacity: 0; pointer-events: none; }
+    #main-app.shots-mode  #stats-bar     { opacity: 1; pointer-events: auto; }
+
+    .stats-bar {
+      padding: 0 28px;
       gap: 20px;
       font-size: 12px;
       color: var(--text-dim);
-      flex-wrap: wrap;
-      flex-shrink: 0;
+      flex-wrap: nowrap;
       letter-spacing: 0.2px;
     }
 
@@ -365,10 +364,34 @@
       color: var(--accent);
     }
 
+    .app-layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Script area: both panels overlay, fade between them */
+    #script-area {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #editor-wrap, #script-panel {
+      position: absolute;
+      inset: 0;
+      overflow-y: auto;
+      transition: opacity 0.35s ease;
+    }
+
+    /* Opacity-based show/hide for script/editor panels */
+    #main-app.write-mode  #editor-wrap  { opacity: 1; pointer-events: auto; }
+    #main-app.write-mode  #script-panel { opacity: 0; pointer-events: none; }
+    #main-app.shots-mode  #editor-wrap  { opacity: 0; pointer-events: none; }
+    #main-app.shots-mode  #script-panel { opacity: 1; pointer-events: auto; }
+
     /* ── Script Panel (shots mode — matches write editor exactly) ── */
     #script-panel {
-      flex: 1;
-      overflow-y: auto;
       padding: 52px 40px;
       background: var(--bg);
     }
@@ -1094,13 +1117,8 @@
 
 
     .write-toolbar {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 7px 32px;
-      display: flex;
-      align-items: center;
+      padding: 0 32px;
       gap: 14px;
-      flex-shrink: 0;
     }
 
     .elem-type-badge {
@@ -1133,8 +1151,6 @@
     }
 
     .screenplay-editor-wrap {
-      flex: 1;
-      overflow-y: auto;
       padding: 52px 40px;
       background: var(--bg);
     }
@@ -1439,10 +1455,6 @@
       animation: landingIn 0.3s ease-out;
     }
 
-    /* Thin accent line under write toolbar */
-    .write-toolbar {
-      box-shadow: 0 1px 0 var(--border);
-    }
 
   </style>
 </head>
@@ -1513,36 +1525,37 @@
 
   <!-- ═══════════════════════════ MAIN APP (unified write + shots) ═══════════════════════════ -->
   <div id="main-app">
-    <!-- Write toolbar — shown in write mode -->
-    <div class="write-toolbar" id="write-toolbar">
-      <span class="elem-type-badge" id="elem-type-label">SCENE HEADING</span>
-      <span class="write-hint">
-        <kbd>Tab</kbd> change element &nbsp;·&nbsp;
-        <kbd>Enter</kbd> new line &nbsp;·&nbsp;
-        <kbd>Backspace</kbd> on empty line removes it
-      </span>
-      <span id="wc-display" style="font-size:12px;color:var(--text-dim);margin-left:auto;white-space:nowrap">Words: <b
-          style="color:var(--accent)">0</b></span>
-      <div class="dl-dropdown">
-        <button class="btn btn-secondary" id="download-script-btn" style="font-size:12px;padding:5px 12px;">Download
-          &#9662;</button>
-        <div class="dl-menu" id="dl-menu">
-          <button class="dl-menu-item" id="dl-fdx-btn">Final Draft (.fdx)</button>
-          <button class="dl-menu-item" id="dl-pdf-btn">PDF (.pdf)</button>
+    <!-- Toolbar area: fixed height, write toolbar and stats bar overlay each other -->
+    <div class="toolbar-area">
+      <div class="write-toolbar" id="write-toolbar">
+        <span class="elem-type-badge" id="elem-type-label">SCENE HEADING</span>
+        <span class="write-hint">
+          <kbd>Tab</kbd> change element &nbsp;·&nbsp;
+          <kbd>Enter</kbd> new line &nbsp;·&nbsp;
+          <kbd>Backspace</kbd> on empty line removes it
+        </span>
+        <span id="wc-display" style="font-size:12px;color:var(--text-dim);margin-left:auto;white-space:nowrap">Words: <b
+            style="color:var(--accent)">0</b></span>
+        <div class="dl-dropdown">
+          <button class="btn btn-secondary" id="download-script-btn" style="font-size:12px;padding:5px 12px;">Download
+            &#9662;</button>
+          <div class="dl-menu" id="dl-menu">
+            <button class="dl-menu-item" id="dl-fdx-btn">Final Draft (.fdx)</button>
+            <button class="dl-menu-item" id="dl-pdf-btn">PDF (.pdf)</button>
+          </div>
         </div>
       </div>
-    </div>
-    <!-- Stats bar — shown in shots mode -->
-    <div class="stats-bar" id="stats-bar">
-      Total words: <b id="stat-words">0</b>
-      &nbsp;·&nbsp;
-      Scenes: <b id="stat-scenes">0</b>
-      &nbsp;·&nbsp;
-      Shots tagged: <b id="stat-shots">0</b>
-      &nbsp;·&nbsp;
-      Coverage: <b id="stat-pct">0%</b>
-      &nbsp;·&nbsp;
-      <span style="color:var(--text-dim)">Click any word to add a shot</span>
+      <div class="stats-bar" id="stats-bar">
+        Total words: <b id="stat-words">0</b>
+        &nbsp;·&nbsp;
+        Scenes: <b id="stat-scenes">0</b>
+        &nbsp;·&nbsp;
+        Shots tagged: <b id="stat-shots">0</b>
+        &nbsp;·&nbsp;
+        Coverage: <b id="stat-pct">0%</b>
+        &nbsp;·&nbsp;
+        <span style="color:var(--text-dim)">Click any word to add a shot</span>
+      </div>
     </div>
     <!-- Unified content layout -->
     <div class="app-layout">
