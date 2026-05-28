@@ -320,44 +320,64 @@
       letter-spacing: 0.3px;
     }
 
-    /* ── App Layout ── */
-    #app {
+    /* ── Main App (unified write + shots layout) ── */
+    #main-app {
       display: none;
+      flex-direction: column;
+      height: calc(100vh - 53px);
     }
 
+    .app-layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    #script-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Write mode: show toolbar, hide stats; shots mode: vice versa */
+    #main-app.write-mode  #stats-bar    { display: none; }
+    #main-app.shots-mode  #write-toolbar { display: none; }
+    #main-app.write-mode  #editor-wrap  { display: flex; flex-direction: column; flex: 1; }
+    #main-app.shots-mode  #editor-wrap  { display: none; }
+    #main-app.write-mode  #script-panel { display: none; }
+    #main-app.shots-mode  #script-panel { display: flex; flex-direction: column; flex: 1; }
+
     .stats-bar {
-      padding: 7px 28px;
+      padding: 8px 28px;
       background: var(--surface);
       border-bottom: 1px solid var(--border);
       display: flex;
-      gap: 28px;
+      gap: 20px;
       font-size: 12px;
       color: var(--text-dim);
       flex-wrap: wrap;
+      flex-shrink: 0;
+      letter-spacing: 0.2px;
     }
 
     .stats-bar b {
       color: var(--accent);
     }
 
-    .layout {
-      display: grid;
-      grid-template-columns: 1fr 340px;
-      height: calc(100vh - 53px - 33px);
-    }
-
-    /* ── Script Panel ── */
+    /* ── Script Panel (shots mode — matches write editor exactly) ── */
     #script-panel {
-      padding: 36px 40px;
+      flex: 1;
       overflow-y: auto;
+      padding: 52px 40px;
       background: var(--bg);
     }
 
     .script-content {
-      max-width: 62ch;
-      margin: 0;
-      line-height: 1.65;
-      font-size: 15px;
+      max-width: 660px;
+      margin: 0 auto;
+      line-height: 1.8;
+      font-size: 13px;
       font-family: 'Courier New', Courier, monospace;
     }
 
@@ -366,40 +386,37 @@
       display: block;
     }
 
-    .shots-line.l-EMPTY {
-      min-height: 0.85em;
-    }
+    /* Shots-mode screenplay lines: pixel values match write-mode editor exactly */
+    .shots-line.l-EMPTY { min-height: 1.8em; }
 
     .shots-line.l-SCENE_HEADING {
       text-transform: uppercase;
       font-weight: 700;
       color: var(--scene-heading-color);
-      margin-top: 1.6em;
-      margin-bottom: 0.2em;
-      letter-spacing: 0.8px;
+      margin-top: 22px;
+      letter-spacing: 1.2px;
+      font-size: 13.5px;
     }
 
-    .shots-line.l-ACTION {
-      margin-top: 0.1em;
-    }
+    .shots-line.l-ACTION { color: var(--text); }
 
     .shots-line.l-CHARACTER {
       text-transform: uppercase;
       font-weight: 700;
       color: var(--accent);
-      padding-left: 22ch;
-      margin-top: 1em;
-      letter-spacing: 0.4px;
+      padding-left: 210px;
+      margin-top: 16px;
+      letter-spacing: 0.5px;
     }
 
     .shots-line.l-DIALOGUE {
-      padding-left: 10ch;
-      padding-right: 10ch;
+      padding-left: 105px;
+      padding-right: 80px;
     }
 
     .shots-line.l-PARENTHETICAL {
-      padding-left: 15ch;
-      padding-right: 15ch;
+      padding-left: 140px;
+      padding-right: 110px;
       color: var(--text-dim);
       font-style: italic;
     }
@@ -408,12 +425,14 @@
       text-transform: uppercase;
       text-align: right;
       color: var(--text-dim);
-      margin-top: 1em;
+      margin-top: 16px;
+      letter-spacing: 0.5px;
+      padding-right: 10px;
     }
 
     .shots-line.l-SUBHEADER {
       font-weight: 700;
-      margin-top: 0.8em;
+      margin-top: 8px;
       letter-spacing: 0.3px;
     }
 
@@ -465,12 +484,21 @@
       font-family: system-ui;
     }
 
-    /* ── Shot List Panel ── */
+    /* ── Shot List Panel (slides in from right) ── */
     #shot-panel {
+      width: 0;
+      min-width: 0;
+      flex-shrink: 0;
+      overflow: hidden;
       background: var(--surface);
-      border-left: 1px solid var(--border);
       display: flex;
       flex-direction: column;
+      transition: width 0.48s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    #main-app.shots-mode #shot-panel {
+      width: 340px;
+      border-left: 1px solid var(--border);
     }
 
     .panel-header {
@@ -1065,13 +1093,6 @@
     }
 
 
-    /* ── Write Screen ── */
-    #write-screen {
-      display: none;
-      flex-direction: column;
-      height: calc(100vh - 53px);
-    }
-
     .write-toolbar {
       background: var(--surface);
       border-bottom: 1px solid var(--border);
@@ -1490,47 +1511,10 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════ MAIN APP ═══════════════════════════ -->
-  <div id="app">
-    <div class="stats-bar" id="stats-bar">
-      Total words: <b id="stat-words">0</b>
-      &nbsp;·&nbsp;
-      Scenes: <b id="stat-scenes">0</b>
-      &nbsp;·&nbsp;
-      Shots tagged: <b id="stat-shots">0</b>
-      &nbsp;·&nbsp;
-      Coverage: <b id="stat-pct">0%</b>
-      &nbsp;·&nbsp;
-      <span style="color:var(--text-dim)">Click any word to add a shot</span>
-    </div>
-    <div class="layout">
-      <!-- Script -->
-      <div id="script-panel">
-        <div class="script-content" id="script-content"></div>
-      </div>
-      <!-- Shot List -->
-      <div id="shot-panel">
-        <div class="panel-header">
-          <h3>Shot List</h3>
-          <div class="count-badge" id="shot-count">0</div>
-        </div>
-        <div id="shot-list">
-          <div class="empty-state">
-            <div class="icon">🎥</div>
-            <p>Click any word in your script<br>to assign a shot to that moment.</p>
-          </div>
-        </div>
-        <div class="panel-footer">
-          <button class="btn btn-secondary" id="export-csv-btn">Export CSV</button>
-          <button class="btn btn-secondary" id="print-btn">Print List</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════ WRITE SCREEN ═══════════════════════════ -->
-  <div id="write-screen">
-    <div class="write-toolbar">
+  <!-- ═══════════════════════════ MAIN APP (unified write + shots) ═══════════════════════════ -->
+  <div id="main-app">
+    <!-- Write toolbar — shown in write mode -->
+    <div class="write-toolbar" id="write-toolbar">
       <span class="elem-type-badge" id="elem-type-label">SCENE HEADING</span>
       <span class="write-hint">
         <kbd>Tab</kbd> change element &nbsp;·&nbsp;
@@ -1548,8 +1532,47 @@
         </div>
       </div>
     </div>
-    <div class="screenplay-editor-wrap">
-      <div class="screenplay-editor" id="screenplay-editor"></div>
+    <!-- Stats bar — shown in shots mode -->
+    <div class="stats-bar" id="stats-bar">
+      Total words: <b id="stat-words">0</b>
+      &nbsp;·&nbsp;
+      Scenes: <b id="stat-scenes">0</b>
+      &nbsp;·&nbsp;
+      Shots tagged: <b id="stat-shots">0</b>
+      &nbsp;·&nbsp;
+      Coverage: <b id="stat-pct">0%</b>
+      &nbsp;·&nbsp;
+      <span style="color:var(--text-dim)">Click any word to add a shot</span>
+    </div>
+    <!-- Unified content layout -->
+    <div class="app-layout">
+      <div id="script-area">
+        <!-- Write editor -->
+        <div class="screenplay-editor-wrap" id="editor-wrap">
+          <div class="screenplay-editor" id="screenplay-editor"></div>
+        </div>
+        <!-- Shots script view -->
+        <div id="script-panel">
+          <div class="script-content" id="script-content"></div>
+        </div>
+      </div>
+      <!-- Shot list panel: slides in when shots-mode -->
+      <div id="shot-panel">
+        <div class="panel-header">
+          <h3>Shot List</h3>
+          <div class="count-badge" id="shot-count">0</div>
+        </div>
+        <div id="shot-list">
+          <div class="empty-state">
+            <div class="icon">🎥</div>
+            <p>Click any word in your script<br>to assign a shot to that moment.</p>
+          </div>
+        </div>
+        <div class="panel-footer">
+          <button class="btn btn-secondary" id="export-csv-btn">Export CSV</button>
+          <button class="btn btn-secondary" id="print-btn">Print List</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1945,8 +1968,10 @@
       currentMode = 'write';
       document.getElementById('main-header').style.display = 'flex';
       document.getElementById('upload-screen').style.display = 'none';
-      document.getElementById('app').style.display = 'none';
-      document.getElementById('write-screen').style.display = 'flex';
+      const mainApp = document.getElementById('main-app');
+      mainApp.style.display = 'flex';
+      mainApp.classList.remove('shots-mode');
+      mainApp.classList.add('write-mode');
       document.getElementById('mode-tabs').style.display = 'flex';
       document.getElementById('btn-write-mode').classList.add('active');
       document.getElementById('btn-shots-mode').classList.remove('active');
@@ -1967,7 +1992,6 @@
       const savedAnnotationsJson = localStorage.getItem('sts_annotations');
       currentMode = 'shots';
       localStorage.setItem('sts_mode', 'shots');
-      document.getElementById('write-screen').style.display = 'none';
       document.getElementById('btn-shots-mode').classList.add('active');
       document.getElementById('btn-write-mode').classList.remove('active');
       // skipPersist=true prevents loadScript from overwriting saved annotations
@@ -2372,8 +2396,10 @@
         currentMode = 'shots';
         document.getElementById('main-header').style.display = 'flex';
         document.getElementById('upload-screen').style.display = 'none';
-        document.getElementById('write-screen').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
+        const mainApp = document.getElementById('main-app');
+        mainApp.style.display = 'flex';
+        mainApp.classList.remove('write-mode');
+        mainApp.classList.add('shots-mode');
         document.getElementById('mode-tabs').style.display = 'flex';
         document.getElementById('btn-shots-mode').classList.add('active');
         document.getElementById('btn-write-mode').classList.remove('active');
@@ -3056,8 +3082,9 @@
         localStorage.removeItem('sts_mode');
       } catch (e) { }
       document.getElementById('main-header').style.display = 'none';
-      document.getElementById('app').style.display = 'none';
-      document.getElementById('write-screen').style.display = 'none';
+      const mainApp = document.getElementById('main-app');
+      mainApp.style.display = 'none';
+      mainApp.classList.remove('write-mode', 'shots-mode');
       document.getElementById('mode-tabs').style.display = 'none';
       document.getElementById('upload-screen').style.display = 'flex';
       document.getElementById('new-script-btn').style.display = 'none';
